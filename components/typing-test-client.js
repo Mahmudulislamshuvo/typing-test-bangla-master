@@ -213,6 +213,7 @@ export default function TypingTestClient({
   const progress = useMemo(() => {
     let typedKeystrokes = 0;
     let correctKeystrokes = 0;
+    let correctStrokes = 0;
 
     for (let i = 0; i < typedChars.length; i += 1) {
       const typedChar = typedChars[i];
@@ -224,10 +225,11 @@ export default function TypingTestClient({
 
       if (i < targetChars.length && typedChar === targetChars[i] && !isSpace) {
         correctKeystrokes += 1;
+        correctStrokes += typedChar.length;
       }
     }
 
-    return { typedKeystrokes, correctKeystrokes };
+    return { typedKeystrokes, correctKeystrokes, correctStrokes };
   }, [typedChars, targetChars]);
 
   const liveWordEvaluation = useMemo(() => {
@@ -255,7 +257,14 @@ export default function TypingTestClient({
       (status) => status === "correct",
     ).length;
     const incorrectWords = wordStatuses.length - correctWords;
-    return { correctWords, incorrectWords, wordStatuses };
+    const correctStrokes = finalTypedWords.reduce((acc, word, idx) => {
+      if (wordStatuses[idx] === "correct") {
+        return acc + word.length;
+      }
+      return acc;
+    }, 0);
+
+    return { correctWords, incorrectWords, wordStatuses, correctStrokes };
   }, [finalTypedWords, targetWords]);
 
   const wordStats = isFinished ? finalWordEvaluation : liveWordEvaluation;
@@ -668,12 +677,14 @@ export default function TypingTestClient({
             <h3 className="mt-2 text-3xl font-extrabold">Detailed Report</h3>
 
             <div className="mt-5 space-y-3 rounded-2xl bg-black/20 p-4">
-              <FinishRow label="Final WPM" value={String(wpm)} />
-              <FinishRow label="Final Accuracy" value={`${accuracy}%`} />
               <FinishRow
                 label="Total Words Typed"
-                value={String(finalTypedWords.length)}
+                value={String(
+                  finalWordEvaluation.correctWords +
+                    finalWordEvaluation.incorrectWords,
+                )}
               />
+              <FinishRow label="Final Accuracy" value={`${accuracy}%`} />
               <FinishRow
                 label="Correct Words"
                 value={String(finalWordEvaluation.correctWords)}
@@ -685,7 +696,9 @@ export default function TypingTestClient({
               {language === "bn" && (
                 <FinishRow
                   label="Stroke Wise Correct Word"
-                  value={String(Math.round(progress.correctKeystrokes / 5))}
+                  value={String(
+                    Math.round(finalWordEvaluation.correctStrokes / 5),
+                  )}
                 />
               )}
             </div>
