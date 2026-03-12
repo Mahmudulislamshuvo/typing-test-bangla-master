@@ -1,0 +1,206 @@
+{
+  "language": "en",
+  "durationMinutes": 1,
+  "documents": [
+    {
+      "id": "en-1-001",
+      "title": "Morning Focus",
+      "text": "Typing every day builds confidence and rhythm. Keep your shoulders relaxed, place your fingers on the home row, and move with steady accuracy before speed. A calm pace helps your brain predict patterns and reduce mistakes. Early morning practice ensures a fresh mind and sharp focus."
+    },
+    {
+      "id": "en-1-002",
+      "title": "Small Progress",
+      "text": "Practice is more powerful than talent when it is consistent. Try to type clean words first, then increase pace little by little. If you make an error, notice it, correct it, and continue without losing focus. Small daily improvements eventually lead to massive long-term results."
+    },
+    {
+      "id": "en-1-003",
+      "title": "Clear Mind",
+      "text": "A good typing session feels like breathing in a rhythm. Read two or three words ahead, keep your wrists light, and trust your muscle memory. Fast typing starts with precise control and smooth transitions. Eliminate distractions from your environment to maintain a perfectly clear mind."
+    },
+    {
+      "id": "en-1-004",
+      "title": "Component Logic",
+      "text": "Building modern web applications requires a solid understanding of component-based architecture. When you write code using React or Next.js, you break the user interface into small, reusable pieces. This approach makes debugging easier and keeps your codebase clean, organized, and highly efficient for future updates."
+    },
+    {
+      "id": "en-1-005",
+      "title": "Dramatic Irony",
+      "text": "Classic literature often relies on dramatic irony to build tension. In Shakespearean tragedies, the audience frequently knows something crucial that the main characters do not. This creates a sense of suspense and emotional engagement, drawing readers deeper into the complex psychological struggles of the protagonist."
+    },
+    {
+      "id": "en-1-006",
+      "title": "Empire Strategy",
+      "text": "Building a strong empire requires more than just military power; it demands careful resource management and strategic alliances. Upgrading your city, training troops, and researching new technologies at the academy are vital steps. Working together with alliance members ensures survival in a highly competitive environment."
+    },
+    {
+      "id": "en-1-007",
+      "title": "Modern Poetry",
+      "text": "Modern poetry often breaks away from traditional rhyme schemes to explore complex human emotions and societal shifts. Writers like W.B. Yeats used powerful symbols and vivid imagery to reflect the turbulent times they lived in. Reading such poetry expands our vocabulary and challenges our perspectives."
+    },
+    {
+      "id": "en-1-008",
+      "title": "Server Rendering",
+      "text": "Server-side rendering is a powerful feature in modern frontend frameworks. It allows pages to load faster and improves search engine optimization. By fetching data on the server before sending it to the browser, developers can provide a seamless and highly responsive experience for the users."
+    },
+    {
+      "id": "en-1-009",
+      "title": "Medieval Tales",
+      "text": "Studying historical literature gives us a window into the past. Chaucer's vivid descriptions of different social classes provide a fascinating glimpse into medieval life. The stories they tell are filled with humor, moral lessons, and timeless observations about human nature that still resonate with us today."
+    },
+    {
+      "id": "en-1-010",
+      "title": "Career Preparation",
+      "text": "Preparing for competitive exams or technical interviews demands strict discipline and a structured routine. Reviewing core concepts, solving previous problems, and taking mock tests regularly will build your confidence. Success is rarely an accident; it is the result of persistent effort and strategic daily planning."
+    },
+    {
+      "id": "en-1-011",
+      "title": "Keyboard Flow",
+      "text": "To achieve a high word-per-minute rate, you must minimize hand movement. Let your fingers hover gracefully over the keys and strike them with deliberate precision. Do not look down at the keyboard. Trust your spatial awareness, and soon your fingers will dance across the board."
+    },
+    {
+      "id": "en-1-012",
+      "title": "Rainy Afternoon",
+      "text": "There is something incredibly soothing about a rainy afternoon. The gentle sound of water hitting the windowpane creates a perfect atmosphere for deep work or reading a good book. It washes away the dust of the city, leaving the air feeling fresh, cool, and renewed."
+    },
+    {
+      "id": "en-1-013",
+      "title": "Utility Classes",
+      "text": "Designing user interfaces has become much faster with utility-first CSS frameworks like Tailwind. Instead of writing custom stylesheets, developers can apply predefined classes directly in their markup. This keeps the design consistent, makes the application responsive by default, and significantly speeds up the development process."
+    },
+    {
+      "id": "en-1-014",
+      "title": "Commanding Forces",
+      "text": "Leading an army to victory requires a brilliant commander and a well-balanced troop composition. Knowing when to attack, when to defend, and when to retreat is the hallmark of a great strategist. Flanking maneuvers and surprise attacks can often turn the tide of a difficult battle."
+    },
+    {
+      "id": "en-1-015",
+      "title": "Symbolic Meaning",
+      "text": "Words are powerful tools that carry deep symbolic meanings. A single metaphor can convey a complex emotion better than a long explanation. Writers spend years mastering this craft, carefully selecting each word to create a specific rhythm, tone, and visual image in the reader's mind."
+    },
+    {
+      "id": "en-1-016",
+      "title": "Digital Security",
+      "text": "In today's interconnected world, protecting personal data is more important than ever. Implementing secure authentication methods, like JSON Web Tokens, helps prevent unauthorized access. Developers must always prioritize security protocols to ensure that user information remains completely safe from potential cyber threats and malicious attacks."
+    },
+    {
+      "id": "en-1-017",
+      "title": "Healthy Habits",
+      "text": "Maintaining physical health is directly linked to mental sharpness. Taking short breaks to stretch your back and rest your eyes during long coding or typing sessions is crucial. Drinking plenty of water and maintaining a proper posture will prevent fatigue and keep your productivity levels high."
+    },
+    {
+      "id": "en-1-018",
+      "title": "State Management",
+      "text": "Handling dynamic data efficiently is the key to building interactive web applications. As a project grows, managing the application state becomes increasingly complex. Using proper hooks and context providers allows developers to pass data smoothly across different components without creating a tangled mess of code."
+    },
+    {
+      "id": "en-1-019",
+      "title": "Time Management",
+      "text": "Time is an irreplaceable resource. Successful people do not simply work hard; they work smart by prioritizing their most important tasks. Avoiding procrastination and breaking large projects into smaller, manageable steps will help you achieve your goals without feeling overwhelmed by tight deadlines or pressure."
+    },
+    {
+      "id": "en-1-020",
+      "title": "Overcoming Failure",
+      "text": "Failure is not the opposite of success; it is a vital part of the learning process. Every mistake you make provides valuable feedback that helps you improve. Embrace your errors, analyze what went wrong, and use that knowledge to build a stronger and more resilient foundation."
+    },
+    {
+      "id": "en-1-021",
+      "title": "Component Logic",
+      "text": "Building interactive user interfaces requires a deep understanding of component lifecycles. When you use modern JavaScript libraries, state management becomes the core of your application. Writing clean, modular code allows you to easily scale your projects and maintain them without unnecessary headaches or complex bugs."
+    },
+    {
+      "id": "en-1-022",
+      "title": "Classic Themes",
+      "text": "The beauty of classic literature lies in its timeless themes. Exploring the depths of human ambition and betrayal in Elizabethan dramas reveals how little human nature has changed. These masterpieces continue to captivate audiences because they speak directly to our shared emotional experiences and universal flaws."
+    },
+    {
+      "id": "en-1-023",
+      "title": "Gathering Resources",
+      "text": "A successful kingdom relies heavily on gathering resources efficiently. Sending your gatherers to high-level nodes while keeping your city defended is a delicate balancing act. Always keep an eye on the map to avoid surprise attacks from rival alliances eager to steal your hard-earned materials."
+    },
+    {
+      "id": "en-1-024",
+      "title": "Exam Dedication",
+      "text": "Preparing for a highly competitive job requires immense dedication. You must thoroughly understand the syllabus, identify your weak points, and practice previous question papers regularly. Staying calm during the actual exam is just as crucial as the months of rigorous study you put in beforehand."
+    },
+    {
+      "id": "en-1-025",
+      "title": "Primary Focus",
+      "text": "Accuracy should always be your primary focus when practicing your typing skills. Speed will naturally follow once your fingers know exactly where to go without hesitation. Do not let a single mistake ruin your rhythm; quickly correct the error, take a breath, and seamlessly move forward."
+    },
+    {
+      "id": "en-1-026",
+      "title": "Natural Symphony",
+      "text": "Taking a quiet walk through a dense forest can instantly relieve mental stress. The rustling of leaves and the distant chirping of birds create a natural symphony. Disconnecting from digital screens allows your mind to reset, fostering creativity and a renewed sense of inner peace."
+    },
+    {
+      "id": "en-1-027",
+      "title": "Medieval Narratives",
+      "text": "Medieval narratives often use a journey or a pilgrimage as a framing device. This allows the author to bring together characters from various social backgrounds. The resulting interactions provide a rich, satirical, and often humorous commentary on the societal norms and hypocrisies of that specific era."
+    },
+    {
+      "id": "en-1-028",
+      "title": "Secure Portals",
+      "text": "Implementing secure user authentication is a critical step in building a web portal. Using web tokens ensures that sensitive data remains protected from unauthorized access. Developers must carefully handle token expiration and secure storage to maintain the highest level of integrity and trust within the application."
+    },
+    {
+      "id": "en-1-029",
+      "title": "Consistent Routine",
+      "text": "Consistency is the secret ingredient to mastering any new skill. Practicing for just fifteen minutes every single day yields far better results than cramming for hours once a week. Build a sustainable routine, trust the process, and you will eventually see remarkable improvements in your abilities."
+    },
+    {
+      "id": "en-1-030",
+      "title": "Strategic Alliances",
+      "text": "Diplomacy is just as important as military strength when expanding your territory. Forming strategic alliances with neighboring leaders can provide essential protection during times of war. A well-coordinated joint attack is almost always more devastating than a solitary assault against a heavily fortified enemy position."
+    },
+    {
+      "id": "en-1-031",
+      "title": "Poetic Symbolism",
+      "text": "Symbolism in modern poetry often reflects the chaos and uncertainty of a rapidly changing world. Poets use fragmented imagery and shifting perspectives to express a deep sense of loss or spiritual yearning. Analyzing these complex verses requires a careful eye and a highly receptive imagination."
+    },
+    {
+      "id": "en-1-032",
+      "title": "Performance Optimization",
+      "text": "Optimizing the performance of a web application greatly enhances the user experience. Leveraging server components and static generation can drastically reduce loading times. A fast, responsive interface keeps users engaged and significantly lowers the bounce rate, which is essential for any modern digital platform's ultimate success."
+    },
+    {
+      "id": "en-1-033",
+      "title": "Smarter Work",
+      "text": "Effective time management is about working smarter, not harder. Start your day by tackling the most difficult task first while your energy levels are high. Breaking complex projects down into smaller, actionable steps makes them feel less overwhelming and helps maintain a steady momentum throughout the week."
+    },
+    {
+      "id": "en-1-034",
+      "title": "System Stability",
+      "text": "Experiencing random system freezes on your computer can be incredibly frustrating. Sometimes, background processes consume too much memory, or a recent update conflicts with existing hardware drivers. Switching to a lighter operating system can often restore stability and breathe new life into an otherwise struggling machine."
+    },
+    {
+      "id": "en-1-035",
+      "title": "Grammatical Precision",
+      "text": "Mastering the grammatical structure of a language gives you the power to articulate complex thoughts with absolute precision. Understanding how different clauses interact within a sentence elevates your writing from basic communication to a sophisticated art form. Continuous reading and deliberate practice are key to linguistic fluency."
+    },
+    {
+      "id": "en-1-036",
+      "title": "Tragic Heroes",
+      "text": "Tragic heroes in classic plays usually possess a fatal flaw that inevitably leads to their downfall. Whether it is blind ambition, overwhelming jealousy, or excessive pride, this fundamental weakness drives the narrative toward a devastating conclusion. Audiences are left with a profound sense of pity and fear."
+    },
+    {
+      "id": "en-1-037",
+      "title": "Responsive Styling",
+      "text": "Responsive design ensures that your application looks beautiful on any device, from large desktop monitors to small mobile screens. Using utility classes allows developers to apply precise styling directly within the markup, creating a highly customized and consistent visual hierarchy without writing thousands of lines of code."
+    },
+    {
+      "id": "en-1-038",
+      "title": "Patient Preparation",
+      "text": "Patience is a virtue when waiting for the results of a major examination. The anxiety can be overwhelming, but it is important to remember that a single test does not define your entire future. Stay positive, keep learning, and always be prepared to embrace new opportunities gracefully."
+    },
+    {
+      "id": "en-1-039",
+      "title": "Tech Progression",
+      "text": "Upgrading your military technology is a crucial step for dominating the battlefield. Researching advanced combat tactics gives your troops a significant advantage over less prepared enemies. A wise commander always prioritizes technological progression alongside raw troop numbers to ensure long-term supremacy in any prolonged conflict."
+    },
+    {
+      "id": "en-1-040",
+      "title": "Work-Life Balance",
+      "text": "Maintaining a healthy work-life balance is essential for preventing burnout. Dedicate specific hours to your professional duties and strictly disconnect once that time is up. Engaging in hobbies, spending time with family, or simply resting are vital for recharging your mental and physical batteries for the next day."
+    }
+  ]
+}
