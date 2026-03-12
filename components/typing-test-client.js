@@ -671,6 +671,10 @@ export default function TypingTestClient({
               <FinishRow label="Final WPM" value={String(wpm)} />
               <FinishRow label="Final Accuracy" value={`${accuracy}%`} />
               <FinishRow
+                label="Total Words Typed"
+                value={String(finalTypedWords.length)}
+              />
+              <FinishRow
                 label="Correct Words"
                 value={String(finalWordEvaluation.correctWords)}
               />
@@ -678,6 +682,12 @@ export default function TypingTestClient({
                 label="Incorrect Words"
                 value={String(finalWordEvaluation.incorrectWords)}
               />
+              {language === "bn" && (
+                <FinishRow
+                  label="Stroke Wise Correct Word"
+                  value={String(Math.round(progress.correctKeystrokes / 5))}
+                />
+              )}
             </div>
 
             <section className="mt-5 rounded-2xl border border-white/20 bg-black/25 p-4">
