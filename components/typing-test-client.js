@@ -677,8 +677,9 @@ export default function TypingTestClient({
             <h3 className="mt-2 text-3xl font-extrabold">Detailed Report</h3>
 
             <div className="mt-5 space-y-3 rounded-2xl bg-black/20 p-4">
+              <FinishRow label="Final WPM" value={String(wpm)} />
               <FinishRow
-                label="Total Words Typed"
+                label="Total Typed Words"
                 value={String(
                   finalWordEvaluation.correctWords +
                     finalWordEvaluation.incorrectWords,
