@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-const DURATION_OPTIONS = [1, 5, 10, 15, 20];
+const DURATION_OPTIONS = [1, 2, 3, 5, 10, 15, 20];
 const DISPLAY_MODES = [
   { value: "passage", label: "Passage Mode" },
   { value: "ticker", label: "Scrolling Mode" },
