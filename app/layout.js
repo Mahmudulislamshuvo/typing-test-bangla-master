@@ -14,14 +14,16 @@ const notoSansBengali = Noto_Sans_Bengali({
 });
 
 export const metadata = {
-  title: "Typing Test",
+  title: "Typing Test Website",
   description: "A simple typing test built with Next.js and Tailwind CSS.",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${manrope.variable} ${notoSansBengali.variable} antialiased`}>
+      <body
+        className={`${manrope.variable} ${notoSansBengali.variable} antialiased`}
+      >
         {children}
       </body>
     </html>
