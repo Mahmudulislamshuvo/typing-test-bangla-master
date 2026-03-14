@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 const DURATION_OPTIONS = [1, 2, 3, 5, 10, 15, 20];
 const DISPLAY_MODES = [
@@ -305,13 +312,8 @@ export default function TypingTestClient({
     return { start, chars: targetChars.slice(start, end) };
   }, [currentCharIndex, targetChars]);
 
-  const tickerOffsets = useMemo(() => {
-    const offsets = [0];
-    for (let i = 0; i < targetWords.length; i += 1) {
-      offsets.push(offsets[i] + targetWords[i].length + 1);
-    }
-    return offsets;
-  }, [targetWords]);
+  const tickerContainerRef = useRef(null);
+  const [tickerOffsetLeft, setTickerOffsetLeft] = useState(0);
 
   const tickerWindow = useMemo(() => {
     const start = Math.max(0, activeWordIndex - 8);
@@ -323,13 +325,17 @@ export default function TypingTestClient({
     };
   }, [activeWordIndex, targetWords]);
 
-  const tickerShiftCh = useMemo(() => {
-    if (!tickerOffsets.length) return 0;
-    const globalActive = Math.min(activeWordIndex, targetWords.length);
-    const base = tickerOffsets[tickerWindow.start] || 0;
-    const active = tickerOffsets[globalActive] || 0;
-    return Math.max(0, active - base);
-  }, [activeWordIndex, targetWords.length, tickerOffsets, tickerWindow.start]);
+  useLayoutEffect(() => {
+    if (displayMode !== "ticker" || !tickerContainerRef.current) return;
+    const activeEl = tickerContainerRef.current.querySelector(
+      '[data-active="true"]',
+    );
+    if (activeEl) {
+      setTickerOffsetLeft(activeEl.offsetLeft);
+    } else {
+      setTickerOffsetLeft(0);
+    }
+  }, [activeWordIndex, displayMode, tickerWindow]);
 
   const fetchWordChunk = useCallback(async (lang, minutes, count = 160) => {
     const params = new URLSearchParams({
@@ -557,9 +563,10 @@ export default function TypingTestClient({
             <div className="relative overflow-hidden rounded-2xl border border-cyan-100/20 bg-slate-950/55 px-4 py-8">
               <div className="pointer-events-none absolute inset-y-0 left-[38%] w-[2px] bg-amber-300/70" />
               <div
+                ref={tickerContainerRef}
                 className="whitespace-nowrap text-2xl font-semibold leading-relaxed text-emerald-50 transition-transform duration-300 ease-out sm:text-3xl"
                 style={{
-                  transform: `translate3d(calc(38% - ${tickerShiftCh}ch), 0, 0)`,
+                  transform: `translate3d(calc(38% - ${tickerOffsetLeft}px), 0, 0)`,
                 }}
               >
                 {tickerWindow.words.map((word, localIndex) => {
@@ -580,6 +587,9 @@ export default function TypingTestClient({
                   return (
                     <span
                       key={`${word}-${globalIndex}`}
+                      data-active={
+                        !isFinished && globalIndex === activeWordIndex
+                      }
                       className={`${className} mr-2 inline-block`}
                     >
                       {word}
@@ -677,7 +687,7 @@ export default function TypingTestClient({
             <h3 className="mt-2 text-3xl font-extrabold">Detailed Report</h3>
 
             <div className="mt-5 space-y-3 rounded-2xl bg-black/20 p-4">
-              <FinishRow label="Final WPM" value={String(wpm)} />
+              <FinishRow label="Final WPM (Per Minute)" value={String(wpm)} />
               <FinishRow
                 label="Total Typed Words"
                 value={String(
