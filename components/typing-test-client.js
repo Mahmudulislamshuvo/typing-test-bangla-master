@@ -463,6 +463,68 @@ export default function TypingTestClient({
     setTypedText(value);
   }
 
+  const hasSavedReportRef = useRef(false);
+
+  useEffect(() => {
+    if (!isFinished) {
+      hasSavedReportRef.current = false;
+      return;
+    }
+
+    if (hasSavedReportRef.current) return;
+
+    const saveReport = async () => {
+      let deviceName = localStorage.getItem("typing-test-device-name");
+      if (!deviceName) {
+        deviceName = `Device-${Math.random()
+          .toString(36)
+          .substring(2, 10)
+          .toUpperCase()}`;
+        localStorage.setItem("typing-test-device-name", deviceName);
+      }
+
+      try {
+        await fetch("/api/save-report", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            deviceName,
+            wpm,
+            accuracy,
+            language,
+            duration: durationMin,
+            mode: displayMode,
+            correctStrokes: finalWordEvaluation.correctStrokes,
+            correctWords: finalWordEvaluation.correctWords,
+            totalWords:
+              finalWordEvaluation.correctWords +
+              finalWordEvaluation.incorrectWords,
+            strokeWiseCorrectWords:
+              language === "bn"
+                ? Math.round(finalWordEvaluation.correctStrokes / 5)
+                : null,
+            date: new Date(),
+          }),
+        });
+        hasSavedReportRef.current = true;
+      } catch (error) {
+        console.error("Failed to save report:", error);
+      }
+    };
+
+    saveReport();
+  }, [
+    isFinished,
+    wpm,
+    accuracy,
+    language,
+    durationMin,
+    displayMode,
+    finalWordEvaluation,
+  ]);
+
   return (
     <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_10%_10%,#0f766e_0%,#052e2b_35%,#041b19_100%)] px-4 py-10 text-slate-100 sm:px-6 lg:px-10">
       <div className="pointer-events-none absolute -left-20 top-8 h-64 w-64 rounded-full bg-amber-300/20 blur-3xl" />
