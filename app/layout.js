@@ -1,5 +1,6 @@
 import "./globals.css";
 import { Manrope, Noto_Sans_Bengali } from "next/font/google";
+import Credits from "../components/Credits";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -25,6 +26,7 @@ export default function RootLayout({ children }) {
         className={`${manrope.variable} ${notoSansBengali.variable} antialiased`}
       >
         {children}
+        <Credits />
       </body>
     </html>
   );
