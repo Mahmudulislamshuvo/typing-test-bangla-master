@@ -312,6 +312,8 @@ export default function TypingTestDisappearing({
     return () => clearInterval(timer);
   }, [isFinished, isRunning]);
 
+  const isComposingRef = useRef(false);
+
   function handleTypingChange(event) {
     if (isFinished || isLoadingSource || loadError) return;
 
@@ -330,7 +332,16 @@ export default function TypingTestDisappearing({
     }
   }
 
+  function handleCompositionStart() {
+    isComposingRef.current = true;
+  }
+
+  function handleCompositionEnd() {
+    isComposingRef.current = false;
+  }
+
   function handleKeyDown(event) {
+    if (isComposingRef.current) return;
     if (event.key === "Backspace") {
       event.preventDefault();
     }
@@ -572,6 +583,8 @@ export default function TypingTestDisappearing({
             value={currentInput}
             onChange={handleTypingChange}
             onKeyDown={handleKeyDown}
+            onCompositionStart={handleCompositionStart}
+            onCompositionEnd={handleCompositionEnd}
             disabled={isFinished || isLoadingSource || Boolean(loadError)}
             placeholder={
               language === "bn"
