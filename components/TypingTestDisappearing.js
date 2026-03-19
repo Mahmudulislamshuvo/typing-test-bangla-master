@@ -369,6 +369,7 @@ export default function TypingTestDisappearing({
             language,
             duration: durationMin,
             mode: displayMode,
+            testType: "Without Backspace",
             correctStrokes: finalWordEvaluation.correctStrokes,
             correctWords: finalWordEvaluation.correctWords,
             totalWords:

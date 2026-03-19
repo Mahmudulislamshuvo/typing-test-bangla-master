@@ -26,6 +26,10 @@ const ReportSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  testType: {
+    type: String,
+    default: "Standard",
+  },
   date: {
     type: Date,
     default: Date.now,

@@ -496,6 +496,7 @@ export default function TypingTestClient({
             language,
             duration: durationMin,
             mode: displayMode,
+            testType: "Standard",
             correctStrokes: finalWordEvaluation.correctStrokes,
             correctWords: finalWordEvaluation.correctWords,
             totalWords:

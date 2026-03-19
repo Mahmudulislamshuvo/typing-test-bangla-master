@@ -66,6 +66,7 @@ export default function ReportsPage() {
                       <tr>
                         <th className="px-4 py-3">Date</th>
                         <th className="px-4 py-3">Language</th>
+                        <th className="px-4 py-3">Type</th>
                         <th className="px-4 py-3">Mode</th>
                         <th className="px-4 py-3">WPM</th>
                         <th className="px-4 py-3">Accuracy</th>
@@ -83,6 +84,9 @@ export default function ReportsPage() {
                           </td>
                           <td className="px-4 py-3 uppercase">
                             {report.language}
+                          </td>
+                          <td className="px-4 py-3 font-semibold text-emerald-200">
+                            {report.testType || "Standard"}
                           </td>
                           <td className="px-4 py-3 capitalize">
                             {report.mode}
