@@ -36,10 +36,8 @@ export default function TypingTestDisappearing({
   const [durationMin, setDurationMin] = useState(initialDuration);
   const [displayMode, setDisplayMode] = useState("passage");
 
-  // Changed state for disappearing mode
-  const [committedText, setCommittedText] = useState("");
-  const [currentInput, setCurrentInput] = useState("");
-  const typedText = committedText + currentInput;
+  // Reverted to single state like Home page to fix Bijoy IME issues
+  const [typedText, setTypedText] = useState("");
 
   const [targetWords, setTargetWords] = useState(initialWords || []);
   const [timeLeft, setTimeLeft] = useState(initialDuration * 60);
@@ -228,8 +226,7 @@ export default function TypingTestDisappearing({
     async (lang = language, minutes = durationMin) => {
       setIsLoadingSource(true);
       setLoadError("");
-      setCommittedText("");
-      setCurrentInput("");
+      setTypedText("");
       setIsRunning(false);
       setIsFinished(false);
       setTimeLeft(minutes * 60);
@@ -322,14 +319,8 @@ export default function TypingTestDisappearing({
       setIsRunning(true);
     }
 
-    // Disappearing Logic:
-    // If user types space, commit the word and clear input
-    if (value.endsWith(" ")) {
-      setCommittedText((prev) => prev + value);
-      setCurrentInput("");
-    } else {
-      setCurrentInput(value);
-    }
+    // Standard typing update to ensure IME stability
+    setTypedText(value);
   }
 
   function handleCompositionStart() {
@@ -580,7 +571,7 @@ export default function TypingTestDisappearing({
             Start Typing (Blind Mode)
           </h2>
           <textarea
-            value={currentInput}
+            value={typedText}
             onChange={handleTypingChange}
             onKeyDown={handleKeyDown}
             onCompositionStart={handleCompositionStart}
@@ -616,8 +607,7 @@ export default function TypingTestDisappearing({
             <button
               type="button"
               onClick={() => {
-                setCommittedText("");
-                setCurrentInput("");
+                setTypedText("");
                 setIsRunning(false);
                 setIsFinished(false);
                 setTimeLeft(totalSeconds);
