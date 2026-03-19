@@ -36,8 +36,10 @@ export default function TypingTestDisappearing({
   const [durationMin, setDurationMin] = useState(initialDuration);
   const [displayMode, setDisplayMode] = useState("passage");
 
-  // Reverted to single state like Home page to fix Bijoy IME issues
-  const [typedText, setTypedText] = useState("");
+  // Changed state for disappearing mode
+  const [committedText, setCommittedText] = useState("");
+  const [currentInput, setCurrentInput] = useState("");
+  const typedText = committedText + currentInput;
 
   const [targetWords, setTargetWords] = useState(initialWords || []);
   const [timeLeft, setTimeLeft] = useState(initialDuration * 60);
@@ -226,7 +228,8 @@ export default function TypingTestDisappearing({
     async (lang = language, minutes = durationMin) => {
       setIsLoadingSource(true);
       setLoadError("");
-      setTypedText("");
+      setCommittedText("");
+      setCurrentInput("");
       setIsRunning(false);
       setIsFinished(false);
       setTimeLeft(minutes * 60);
@@ -319,8 +322,13 @@ export default function TypingTestDisappearing({
       setIsRunning(true);
     }
 
-    // Standard typing update to ensure IME stability
-    setTypedText(value);
+    // Auto-commit on Space
+    if (value.endsWith(" ")) {
+      setCommittedText((prev) => prev + value);
+      setCurrentInput("");
+    } else {
+      setCurrentInput(value);
+    }
   }
 
   function handleCompositionStart() {
@@ -333,7 +341,10 @@ export default function TypingTestDisappearing({
 
   function handleKeyDown(event) {
     if (isComposingRef.current) return;
-    if (event.key === "Backspace") {
+
+    // For English, we strictly block Backspace to enforce "Blind Mode".
+    // For Bangla, we allow Backspace as it is required for IMEs (Bijoy).
+    if (event.key === "Backspace" && language !== "bn") {
       event.preventDefault();
     }
   }
@@ -571,7 +582,7 @@ export default function TypingTestDisappearing({
             Start Typing (Blind Mode)
           </h2>
           <textarea
-            value={typedText}
+            value={currentInput}
             onChange={handleTypingChange}
             onKeyDown={handleKeyDown}
             onCompositionStart={handleCompositionStart}
@@ -607,7 +618,8 @@ export default function TypingTestDisappearing({
             <button
               type="button"
               onClick={() => {
-                setTypedText("");
+                setCommittedText("");
+                setCurrentInput("");
                 setIsRunning(false);
                 setIsFinished(false);
                 setTimeLeft(totalSeconds);
