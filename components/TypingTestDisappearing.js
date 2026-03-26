@@ -85,11 +85,11 @@ export default function TypingTestDisappearing({
       const isSpace = /\s/u.test(typedChar);
 
       if (!isSpace) {
-        typedKeystrokes += 1;
+        typedKeystrokes += typedChar.length;
       }
 
       if (i < targetChars.length && typedChar === targetChars[i] && !isSpace) {
-        correctKeystrokes += 1;
+        correctKeystrokes += typedChar.length;
         correctStrokes += typedChar.length;
       }
     }
@@ -108,7 +108,13 @@ export default function TypingTestDisappearing({
       (status) => status === "correct",
     ).length;
     const incorrectWords = wordStatuses.length - correctWords;
-    return { correctWords, incorrectWords, wordStatuses };
+    const correctStrokes = liveTypedWords.reduce((acc, word, idx) => {
+      if (wordStatuses[idx] === "correct") {
+        return acc + word.length;
+      }
+      return acc;
+    }, 0);
+    return { correctWords, incorrectWords, wordStatuses, correctStrokes };
   }, [liveTypedWords, targetWords]);
 
   const finalWordEvaluation = useMemo(() => {
@@ -148,10 +154,9 @@ export default function TypingTestDisappearing({
   const accuracy =
     progress.typedKeystrokes > 0
       ? Number(
-          (
-            (progress.correctKeystrokes / progress.typedKeystrokes) *
-            100
-          ).toFixed(1),
+          ((wordStats.correctStrokes / progress.typedKeystrokes) * 100).toFixed(
+            1,
+          ),
         )
       : 100;
 
@@ -641,6 +646,14 @@ export default function TypingTestDisappearing({
             <h3 className="mt-2 text-3xl font-extrabold">Detailed Report</h3>
 
             <div className="mt-5 space-y-3 rounded-2xl bg-black/20 p-4">
+              {language === "bn" && (
+                <FinishRow
+                  label="Stroke Wise Correct Word"
+                  value={String(
+                    Math.round(finalWordEvaluation.correctStrokes / 5),
+                  )}
+                />
+              )}
               <FinishRow label="Final WPM (Per Minute)" value={String(wpm)} />
               <FinishRow
                 label="Total Typed Words"
@@ -658,14 +671,6 @@ export default function TypingTestDisappearing({
                 label="Incorrect Words"
                 value={String(finalWordEvaluation.incorrectWords)}
               />
-              {language === "bn" && (
-                <FinishRow
-                  label="Stroke Wise Correct Word"
-                  value={String(
-                    Math.round(finalWordEvaluation.correctStrokes / 5),
-                  )}
-                />
-              )}
             </div>
 
             <section className="mt-5 rounded-2xl border border-white/20 bg-black/25 p-4">
