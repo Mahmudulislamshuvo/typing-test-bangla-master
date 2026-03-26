@@ -4,7 +4,9 @@ import { getRandomWordChunk } from "@/lib/typing-data";
 export const dynamic = "force-dynamic";
 
 export default async function DisappearingPage() {
-  const initialWords = await getRandomWordChunk("en", 1, 220);
+  const result = await getRandomWordChunk("en", 1, 220);
+  // Ensure we consistently pass an array of words
+  const initialWords = Array.isArray(result) ? result : result.words || [];
 
   return (
     <TypingTestDisappearing

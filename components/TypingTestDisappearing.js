@@ -27,6 +27,15 @@ const LANGUAGE_OPTIONS = [
   { value: "bn", label: "বাংলা" },
 ];
 
+function shuffleArray(array) {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+}
+
 export default function TypingTestDisappearing({
   initialLanguage,
   initialDuration,
@@ -41,7 +50,9 @@ export default function TypingTestDisappearing({
   const [currentInput, setCurrentInput] = useState("");
   const typedText = committedText + currentInput;
 
-  const [targetWords, setTargetWords] = useState(initialWords || []);
+  const [targetWords, setTargetWords] = useState(
+    Array.isArray(initialWords) ? initialWords : [],
+  );
   const [timeLeft, setTimeLeft] = useState(initialDuration * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
@@ -50,6 +61,53 @@ export default function TypingTestDisappearing({
 
   const isFetchingMoreRef = useRef(false);
   const skipInitialSelectionReloadRef = useRef(true);
+
+  // Track seen documents to cycle through them randomly without repetition
+  // Key format: `${lang}-${duration}` -> [shuffled_indices]
+  const playlistRef = useRef({});
+  const totalDocsRef = useRef({});
+
+  // Initialize playlist from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("typing-test-playlist");
+      if (stored) {
+        playlistRef.current = JSON.parse(stored);
+      }
+    } catch (e) {
+      console.error("Failed to load playlist", e);
+    }
+  }, []);
+
+  const savePlaylist = useCallback(() => {
+    try {
+      localStorage.setItem(
+        "typing-test-playlist",
+        JSON.stringify(playlistRef.current),
+      );
+    } catch (e) {
+      console.error("Failed to save playlist", e);
+    }
+  }, []);
+
+  const getNextIndex = useCallback(
+    (key, totalDocs) => {
+      // If we don't know totalDocs yet, we can't generate a playlist.
+      // Return -1 to let the server pick a random one (and return totalDocs for next time).
+      if (!totalDocs || totalDocs <= 0) return -1;
+
+      if (!playlistRef.current[key] || playlistRef.current[key].length === 0) {
+        // Create new shuffled playlist
+        const indices = Array.from({ length: totalDocs }, (_, i) => i);
+        playlistRef.current[key] = shuffleArray(indices);
+      }
+
+      const nextIndex = playlistRef.current[key].pop();
+      savePlaylist();
+      return nextIndex;
+    },
+    [savePlaylist],
+  );
 
   const locale = language === "bn" ? "bn" : "en";
   const totalSeconds = durationMin * 60;
@@ -200,34 +258,60 @@ export default function TypingTestDisappearing({
     }
   }, [activeWordIndex, displayMode, tickerWindow]);
 
-  const fetchWordChunk = useCallback(async (lang, minutes, count = 160) => {
-    const params = new URLSearchParams({
-      lang,
-      duration: String(minutes),
-      count: String(count),
-    });
+  const fetchWordChunk = useCallback(
+    async (lang, minutes, count = 160) => {
+      // Only determine index for initial load, not for "append" calls which just need random chunks?
+      // Actually, "appendMoreWords" is for infinite scroll. If we are infinite scrolling, we probably just want MORE of the SAME document if possible?
+      // But currently backend randomizes snippet if index -1.
+      // So infinite scroll within a test should just provide MORE words. Random snippets is fine.
 
-    const response = await fetch(`/api/typing-source?${params.toString()}`, {
-      cache: "no-store",
-    });
+      let forceIndex = -1;
+      const key = `${lang}-${minutes}`;
 
-    if (!response.ok) {
-      throw new Error("Failed to load typing source.");
-    }
+      // If it's a "New Stream" (count > 200, heuristic check), use playlist logic
+      if (count > 200) {
+        const knownTotal = totalDocsRef.current[key] || 0;
+        if (knownTotal > 0) {
+          forceIndex = getNextIndex(key, knownTotal);
+        }
+      }
 
-    const payload = await response.json();
-    const words = Array.isArray(payload?.words)
-      ? payload.words
-          .filter((word) => typeof word === "string" && word.trim())
-          .map((word) => normalizeText(word, lang))
-      : [];
+      const params = new URLSearchParams({
+        lang,
+        duration: String(minutes),
+        count: String(count),
+        ...(forceIndex !== -1 && { index: String(forceIndex) }),
+      });
 
-    if (!words.length) {
-      throw new Error("Typing source is empty.");
-    }
+      const response = await fetch(`/api/typing-source?${params.toString()}`, {
+        cache: "no-store",
+      });
 
-    return words;
-  }, []);
+      if (!response.ok) {
+        throw new Error("Failed to load typing source.");
+      }
+
+      const payload = await response.json();
+
+      // Update known total docs for this category
+      if (payload.totalDocs) {
+        totalDocsRef.current[key] = payload.totalDocs;
+      }
+
+      const words = Array.isArray(payload?.words)
+        ? payload.words
+            .filter((word) => typeof word === "string" && word.trim())
+            .map((word) => normalizeText(word, lang))
+        : [];
+
+      if (!words.length) {
+        throw new Error("Typing source is empty.");
+      }
+
+      return words;
+    },
+    [getNextIndex],
+  );
 
   const replaceSource = useCallback(
     async (lang = language, minutes = durationMin) => {
@@ -240,8 +324,8 @@ export default function TypingTestDisappearing({
       setTimeLeft(minutes * 60);
 
       try {
-        const words = await fetchWordChunk(lang, minutes, 220);
-        setTargetWords(words);
+        const wordsData = await fetchWordChunk(lang, minutes, 220);
+        setTargetWords(Array.isArray(wordsData) ? wordsData : []);
       } catch (error) {
         setTargetWords([]);
         setLoadError(error?.message || "Unable to load typing source.");
