@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
+import PusherClient from "pusher-js";
 
 export default function ReportsPage() {
   const [groupedReports, setGroupedReports] = useState({});
@@ -11,23 +12,63 @@ export default function ReportsPage() {
   const [expandedGraphs, setExpandedGraphs] = useState({});
 
   useEffect(() => {
-    fetch("/api/reports")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.success) {
-          const grouped = data.data.reduce((acc, report) => {
-            if (!acc[report.deviceName]) acc[report.deviceName] = [];
-            acc[report.deviceName].push(report);
-            return acc;
-          }, {});
-          setGroupedReports(grouped);
-        }
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error(err);
-        setLoading(false);
+    let isMounted = true;
+
+    const fetchReports = () => {
+      fetch(`/api/reports?t=${Date.now()}`)
+        .then((res) => res.json())
+        .then((data) => {
+          if (!isMounted) return;
+          if (data.success) {
+            const grouped = data.data.reduce((acc, report) => {
+              if (!acc[report.deviceName]) acc[report.deviceName] = [];
+              acc[report.deviceName].push(report);
+              return acc;
+            }, {});
+            setGroupedReports(grouped);
+          }
+          setLoading(false);
+        })
+        .catch((err) => {
+          if (!isMounted) return;
+          console.error(err);
+          setLoading(false);
+        });
+    };
+
+    // Initial fetch
+    fetchReports();
+
+    let pusher = null;
+    if (process.env.NEXT_PUBLIC_PUSHER_KEY) {
+      pusher = new PusherClient(process.env.NEXT_PUBLIC_PUSHER_KEY, {
+        cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
       });
+
+      const channel = pusher.subscribe("reports-channel");
+      channel.bind("new-report", (newReport) => {
+        setGroupedReports((prev) => {
+          const updated = { ...prev };
+          if (!updated[newReport.deviceName]) {
+            updated[newReport.deviceName] = [];
+          }
+          // Prepend the new report
+          updated[newReport.deviceName] = [
+            newReport,
+            ...updated[newReport.deviceName],
+          ];
+          return updated;
+        });
+      });
+    }
+
+    return () => {
+      isMounted = false;
+      if (pusher) {
+        pusher.unsubscribe("reports-channel");
+        pusher.disconnect();
+      }
+    };
   }, []);
 
   const toggleDevice = (deviceName) => {

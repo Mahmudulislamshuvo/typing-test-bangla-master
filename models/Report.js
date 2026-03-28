@@ -64,7 +64,7 @@ const ReportSchema = new mongoose.Schema({
   },
 });
 
-// Using a new model name 'TypingReport' to ensure schema changes are picked up without server restart
+// Using a new model name 'TypingTestReportV2' to ensure schema changes are picked up without server restart
 // We explicitly map it to the 'reports' collection to keep data in one place
-export default mongoose.models.TypingReport ||
-  mongoose.model("TypingReport", ReportSchema, "reports");
+export default mongoose.models.TypingTestReportV2 ||
+  mongoose.model("TypingTestReportV2", ReportSchema, "reports");
