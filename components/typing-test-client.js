@@ -207,7 +207,7 @@ export default function TypingTestClient({
   const isFetchingMoreRef = useRef(false);
   const skipInitialSelectionReloadRef = useRef(true);
   const lastWordCountRef = useRef(0);
-  const wordStartTimeRef = useRef(null);
+  const lastTypingTimeRef = useRef(null);
 
   // Track seen documents to cycle through them randomly without repetition
   // Key format: `${lang}-${duration}` -> [shuffled_indices]
@@ -570,7 +570,7 @@ export default function TypingTestClient({
       setHoveredWordIndex(null);
       setChartZoom(1);
       lastWordCountRef.current = 0;
-      wordStartTimeRef.current = null;
+      lastTypingTimeRef.current = null;
       setIsRunning(false);
       setIsFinished(false);
       setTimeLeft(minutes * 60);
@@ -654,58 +654,126 @@ export default function TypingTestClient({
     return () => clearInterval(timer);
   }, [isFinished, isRunning]);
 
+  // function handleTypingChange(event) {
+  //   if (isFinished || isLoadingSource || loadError) return;
+
+  //   let value = event.target.value.trimStart();
+  //   const now = performance.now();
+
+  //   let timeDelta = 0;
+  //   if (lastTypingTimeRef.current !== null) {
+  //     timeDelta = now - lastTypingTimeRef.current;
+  //   }
+  //   lastTypingTimeRef.current = now;
+
+  //   if (!isRunning && value.length > 0) {
+  //     setIsRunning(true);
+  //   }
+
+  //   const wordsNow = splitStrictWords(value, locale, false);
+  //   const endsWithSpace = event.target.value.endsWith(" ");
+
+  //   // Determine the currentIndex of the active word (consider if the input ends with a space).
+  //   const targetLength =
+  //     value === "" ? 0 : endsWithSpace ? wordsNow.length + 1 : wordsNow.length;
+  //   const currentIndex = targetLength > 0 ? targetLength - 1 : 0;
+
+  //   setWordTimings((prev) => {
+  //     let next = [...prev];
+
+  //     // Expand the array to match the target length
+  //     while (next.length < targetLength) {
+  //       next.push({
+  //         word: "",
+  //         durationMs: 0,
+  //       });
+  //     }
+
+  //     // Apply correct word strings to each completed block
+  //     for (let i = 0; i < wordsNow.length; i++) {
+  //       if (next[i]) {
+  //         next[i].word = wordsNow[i];
+  //       }
+  //     }
+
+  //     // Inside setWordTimings, simply accumulate the timeDelta into the active word's durationMs
+  //     if (next[currentIndex] && !endsWithSpace) {
+  //       next[currentIndex].durationMs += timeDelta;
+  //     }
+
+  //     // Important Backspace Handling: If the user backspaces and deletes entire words
+  //     // loop through all indices after the currentIndex and reset their word to "" and durationMs to 0
+  //     const startResetIndex = targetLength === 0 ? 0 : currentIndex + 1;
+  //     for (let i = startResetIndex; i < next.length; i++) {
+  //       if (next[i]) {
+  //         next[i].word = "";
+  //         next[i].durationMs = 0;
+  //       }
+  //     }
+
+  //     return next;
+  //   });
+
+  //   setTypedText(event.target.value);
+  // }
   function handleTypingChange(event) {
     if (isFinished || isLoadingSource || loadError) return;
 
-    const value = event.target.value;
+    const rawValue = event.target.value;
+    const value = rawValue.trimStart();
     const now = performance.now();
-    if (!isRunning && value.trim().length > 0) {
+
+    let timeDelta = 0;
+    if (lastTypingTimeRef.current !== null) {
+      timeDelta = now - lastTypingTimeRef.current;
+    }
+    lastTypingTimeRef.current = now;
+
+    if (!isRunning && value.length > 0) {
       setIsRunning(true);
     }
-    if (value.trim().length > 0 && wordStartTimeRef.current === null) {
-      wordStartTimeRef.current = now;
-    }
 
-    const wordsNow = splitStrictWords(value, locale, false);
-    const newCount = wordsNow.length;
-    const prevCount = lastWordCountRef.current;
+    const wordsNow = splitStrictWords(value, locale, true);
+    const targetLength = value === "" ? 0 : wordsNow.length;
+    const currentIndex = targetLength > 0 ? targetLength - 1 : 0;
 
     setWordTimings((prev) => {
-      let next = [...prev];
-      if (newCount > prevCount) {
-        const completed = wordsNow.slice(prevCount, newCount);
-        const entries = completed.map((word) => ({
-          word,
-          startTime: wordStartTimeRef.current ?? now,
-          durationMs: Math.max(0, now - (wordStartTimeRef.current ?? now)),
-          endTime: now,
-        }));
-        next = [...next, ...entries];
-      } else if (newCount < prevCount) {
-        next = next.slice(0, newCount);
+      // ১. Deep Copy: আগের ডাটা সরাসরি পরিবর্তন না করে সেফ কপি তৈরি করা (ডাবল কাউন্ট বাগ ফিক্স)
+      let next = prev.map((item) => ({ ...item }));
+
+      // অ্যারে এক্সপান্ড করা
+      while (next.length < targetLength) {
+        next.push({
+          word: "",
+          durationMs: 0,
+        });
       }
 
-      for (let i = 0; i < newCount; i++) {
+      // শব্দগুলো আপডেট করা
+      for (let i = 0; i < wordsNow.length; i++) {
         if (next[i]) {
-          if (next[i].word !== wordsNow[i]) {
-            next[i] = { ...next[i], word: wordsNow[i] };
-          }
-          if (i === newCount - 1) {
-            const start = next[i].startTime ?? wordStartTimeRef.current ?? now;
-            next[i].durationMs = Math.max(0, now - start);
-            next[i].endTime = now;
-          }
+          next[i].word = wordsNow[i];
         }
       }
+
+      // ২. সঠিক জায়গায় সময় যোগ করা (Delta time active word)
+      if (targetLength > 0 && next[currentIndex]) {
+        next[currentIndex].durationMs += timeDelta;
+      }
+
+      // ৩. Backspace হ্যান্ডলিং (মুছে ফেলা শব্দের ডাটা জিরো করে দেওয়া)
+      const startResetIndex = targetLength === 0 ? 0 : currentIndex + 1;
+      for (let i = startResetIndex; i < next.length; i++) {
+        if (next[i]) {
+          next[i].word = "";
+          next[i].durationMs = 0;
+        }
+      }
+
       return next;
     });
 
-    if (newCount !== prevCount) {
-      wordStartTimeRef.current = now;
-    }
-
-    lastWordCountRef.current = newCount;
-    setTypedText(value);
+    setTypedText(rawValue);
   }
 
   const hasSavedReportRef = useRef(false);
@@ -992,7 +1060,8 @@ export default function TypingTestClient({
                 setHoveredWordIndex(null);
                 setChartZoom(1);
                 lastWordCountRef.current = 0;
-                wordStartTimeRef.current = null;
+                lastTypingTimeRef.current = null;
+
                 setIsRunning(false);
                 setIsFinished(false);
                 setTimeLeft(totalSeconds);

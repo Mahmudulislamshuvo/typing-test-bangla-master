@@ -1,0 +1,59 @@
+function handleTypingChange(event) {
+    if (isFinished || isLoadingSource || loadError) return;
+
+    let value = event.target.value.trimStart();
+    const now = performance.now();
+
+    if (!isRunning && value.length > 0) {
+      setIsRunning(true);
+    }
+
+    const wordsNow = splitStrictWords(value, locale, false);
+    const endsWithSpace = event.target.value.endsWith(" ");
+    // If the string is inherently empty despite the type event, zero length.
+    // If they typed a trailing space, it means they moved to the next word.
+    const targetLength =
+      value === "" ? 0 : endsWithSpace ? wordsNow.length + 1 : wordsNow.length;
+
+    setWordTimings((prev) => {
+      let next = [...prev];
+
+      // Expand the array to match the target length
+      while (next.length < targetLength) {
+        next.push({
+          word: "",
+          firstKeystroke: null,
+          lastKeystroke: null,
+          durationMs: 0,
+        });
+      }
+
+      // Shrink the array if the user backspaced across a word boundary
+      if (next.length > targetLength) {
+        next = next.slice(0, targetLength);
+      }
+
+      // Apply correct word strings to each completed block
+      for (let i = 0; i < wordsNow.length; i++) {
+        if (next[i]) {
+          next[i].word = wordsNow[i];
+        }
+      }
+
+      // Time tracking updates ONLY apply to the active index.
+      const activeIndex = targetLength > 0 ? targetLength - 1 : 0;
+      if (next[activeIndex] && !endsWithSpace) {
+        if (next[activeIndex].firstKeystroke === null) {
+          next[activeIndex].firstKeystroke = now;
+        }
+        next[activeIndex].lastKeystroke = now;
+        next[activeIndex].durationMs = Math.max(
+          0,
+          next[activeIndex].lastKeystroke - next[activeIndex].firstKeystroke,
+        );
+      }
+      return next;
+    });
+
+    setTypedText(event.target.value);
+  }
