@@ -1038,12 +1038,12 @@ export default function TypingTestClient({
                       <linearGradient
                         id="speed-line"
                         x1="0"
-                        y1="0"
-                        x2="1"
+                        y1="1"
+                        x2="0"
                         y2="0"
                       >
-                        <stop offset="0%" stopColor="#22d3ee" />
-                        <stop offset="100%" stopColor="#fbbf24" />
+                        <stop offset="0%" stopColor="#ef4444" />
+                        <stop offset="100%" stopColor="#22c55e" />
                       </linearGradient>
                       <filter
                         id="speed-glow"
@@ -1140,9 +1140,17 @@ export default function TypingTestClient({
                         0,
                         Math.min(1, point.normalized ?? 0),
                       );
-                      const red = Math.round(248 - intensity * 88);
-                      const green = Math.round(113 + intensity * 96);
-                      const blue = Math.round(113 - intensity * 64);
+                      const low = { r: 220, g: 38, b: 38 };
+                      const high = { r: 34, g: 197, b: 94 };
+                      const red = Math.round(
+                        low.r + (high.r - low.r) * intensity,
+                      );
+                      const green = Math.round(
+                        low.g + (high.g - low.g) * intensity,
+                      );
+                      const blue = Math.round(
+                        low.b + (high.b - low.b) * intensity,
+                      );
                       const pointColor = isIncorrect
                         ? "#f87171"
                         : `rgb(${red}, ${green}, ${blue})`;
