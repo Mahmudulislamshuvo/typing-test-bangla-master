@@ -14,7 +14,8 @@ export async function POST(req) {
     // Broadcast the new report to connected clients via Pusher
     if (pusherServer) {
       const payload = report.toObject ? report.toObject() : report;
-      pusherServer
+      // MUST await the trigger in serverless environments or it will be cancelled!
+      await pusherServer
         .trigger("reports-channel", "new-report", payload)
         .catch((err) => console.error("Pusher trigger error:", err));
     }
