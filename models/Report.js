@@ -50,6 +50,18 @@ const ReportSchema = new mongoose.Schema({
     type: Number,
     required: false,
   },
+  wordTimings: {
+    type: [
+      {
+        word: { type: String },
+        durationMs: { type: Number },
+        wpm: { type: Number },
+        strokeCount: { type: Number },
+        status: { type: String },
+      },
+    ],
+    required: false,
+  },
 });
 
 // Using a new model name 'TypingReport' to ensure schema changes are picked up without server restart

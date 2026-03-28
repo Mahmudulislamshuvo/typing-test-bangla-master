@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
 
 export default function ReportsPage() {
   const [groupedReports, setGroupedReports] = useState({});
   const [loading, setLoading] = useState(true);
   const [expandedDevices, setExpandedDevices] = useState({});
+  const [showGraphs, setShowGraphs] = useState(false);
 
   useEffect(() => {
     fetch("/api/reports")
@@ -48,12 +49,31 @@ export default function ReportsPage() {
       <div className="mx-auto max-w-6xl">
         <header className="mb-8 flex items-center justify-between">
           <h1 className="text-3xl font-bold text-white">Typing Reports</h1>
-          <Link
-            href="/"
-            className="rounded-lg bg-emerald-600 px-4 py-2 font-semibold text-white transition hover:bg-emerald-500"
-          >
-            Back to Test
-          </Link>
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-2 text-sm text-emerald-200">
+              <span>Show Graphs</span>
+              <button
+                type="button"
+                onClick={() => setShowGraphs((prev) => !prev)}
+                className={`relative h-6 w-11 rounded-full transition ${
+                  showGraphs ? "bg-emerald-500" : "bg-slate-700"
+                }`}
+                aria-pressed={showGraphs}
+              >
+                <span
+                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition ${
+                    showGraphs ? "left-5" : "left-0.5"
+                  }`}
+                />
+              </button>
+            </label>
+            <Link
+              href="/"
+              className="rounded-lg bg-emerald-600 px-4 py-2 font-semibold text-white transition hover:bg-emerald-500"
+            >
+              Back to Test
+            </Link>
+          </div>
         </header>
 
         {Object.keys(groupedReports).length === 0 ? (
@@ -93,38 +113,53 @@ export default function ReportsPage() {
                       </thead>
                       <tbody className="divide-y divide-white/5">
                         {displayedReports.map((report) => (
-                          <tr key={report._id} className="hover:bg-white/5">
-                            <td className="px-4 py-3">
-                              {new Date(report.date).toLocaleString()}
-                            </td>
-                            <td className="px-4 py-3 uppercase">
-                              {report.language}
-                            </td>
-                            <td className="px-4 py-3 font-semibold text-emerald-200">
-                              {report.testType || "Standard"}
-                            </td>
-                            <td className="px-4 py-3 capitalize">
-                              {report.mode}
-                            </td>
-                            <td className="px-4 py-3 font-bold text-amber-300">
-                              {report.wpm}
-                            </td>
-                            <td className="px-4 py-3 text-cyan-300">
-                              {report.accuracy}%
-                            </td>
-                            <td className="px-4 py-3 text-emerald-300">
-                              {report.correctStrokes || "-"}
-                            </td>
-                            <td className="px-4 py-3">
-                              {report.correctWords !== undefined
-                                ? `${report.correctWords} / ${report.totalWords}`
-                                : "-"}
-                            </td>
-                            <td className="px-4 py-3 text-teal-300">
-                              {report.strokeWiseCorrectWords || "-"}
-                            </td>
-                            <td className="px-4 py-3">{report.duration} min</td>
-                          </tr>
+                          <Fragment key={report._id}>
+                            <tr className="hover:bg-white/5">
+                              <td className="px-4 py-3">
+                                {new Date(report.date).toLocaleString()}
+                              </td>
+                              <td className="px-4 py-3 uppercase">
+                                {report.language}
+                              </td>
+                              <td className="px-4 py-3 font-semibold text-emerald-200">
+                                {report.testType || "Standard"}
+                              </td>
+                              <td className="px-4 py-3 capitalize">
+                                {report.mode}
+                              </td>
+                              <td className="px-4 py-3 font-bold text-amber-300">
+                                {report.wpm}
+                              </td>
+                              <td className="px-4 py-3 text-cyan-300">
+                                {report.accuracy}%
+                              </td>
+                              <td className="px-4 py-3 text-emerald-300">
+                                {report.correctStrokes || "-"}
+                              </td>
+                              <td className="px-4 py-3">
+                                {report.correctWords !== undefined
+                                  ? `${report.correctWords} / ${report.totalWords}`
+                                  : "-"}
+                              </td>
+                              <td className="px-4 py-3 text-teal-300">
+                                {report.strokeWiseCorrectWords || "-"}
+                              </td>
+                              <td className="px-4 py-3">
+                                {report.duration} min
+                              </td>
+                            </tr>
+                            {showGraphs && (
+                              <tr className="bg-black/20">
+                                <td
+                                  className="px-4 py-4"
+                                  colSpan={10}
+                                  style={{ maxWidth: "1px" }}
+                                >
+                                  <ReportTimingChart report={report} />
+                                </td>
+                              </tr>
+                            )}
+                          </Fragment>
                         ))}
                       </tbody>
                     </table>
@@ -147,5 +182,207 @@ export default function ReportsPage() {
         )}
       </div>
     </main>
+  );
+}
+
+function ReportTimingChart({ report }) {
+  const [zoom, setZoom] = useState(1);
+  const [hoveredIndex, setHoveredIndex] = useState(null);
+  const timings = Array.isArray(report.wordTimings) ? report.wordTimings : [];
+  if (!timings.length) {
+    return (
+      <div className="rounded-xl border border-white/10 bg-white/5 p-4 text-xs text-slate-400">
+        No timing data saved for this report.
+      </div>
+    );
+  }
+
+  const wpmValues = timings.map((entry) => entry.wpm || 0);
+  const maxWpm = Math.max(...wpmValues, 0);
+  const minWpm = Math.min(...wpmValues, 0);
+  const range = maxWpm - minWpm || 1;
+
+  const baseViewWidth = 640;
+  const viewHeight = 280;
+  const padding = { left: 40, right: 16, top: 100, bottom: 30 };
+  const baseChartWidth = baseViewWidth - padding.left - padding.right;
+  const chartWidth = baseChartWidth * zoom;
+  const viewWidth = padding.left + padding.right + chartWidth;
+  const chartHeight = viewHeight - padding.top - padding.bottom;
+
+  const points = wpmValues.map((value, index) => {
+    const x =
+      padding.left + (index / Math.max(wpmValues.length - 1, 1)) * chartWidth;
+    const normalized = (value - minWpm) / range;
+    const y = padding.top + (1 - normalized) * chartHeight;
+    return { x, y, normalized };
+  });
+
+  const path = points
+    .map(
+      (point, index) =>
+        `${index === 0 ? "M" : "L"} ${point.x.toFixed(1)} ${point.y.toFixed(1)}`,
+    )
+    .join(" ");
+
+  const lastPoint = points[points.length - 1] || { x: padding.left, y: 0 };
+  const areaPath = `${path} L ${lastPoint.x.toFixed(1)} ${(
+    padding.top + chartHeight
+  ).toFixed(1)} L ${padding.left} ${(padding.top + chartHeight).toFixed(1)} Z`;
+
+  return (
+    <div className="rounded-2xl border border-white/10 bg-slate-950/50 p-4">
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-300">
+        <span>Per-word WPM timeline</span>
+        <div className="flex items-center gap-2">
+          <span>{timings.length} points</span>
+          <label className="flex items-center gap-2">
+            Zoom
+            <input
+              type="range"
+              min="1"
+              max="4"
+              step="0.25"
+              value={zoom}
+              onChange={(event) => setZoom(Number(event.target.value))}
+              className="h-1 w-24 cursor-pointer accent-emerald-300"
+            />
+          </label>
+        </div>
+      </div>
+      <div className="overflow-x-auto overflow-y-visible">
+        <div className="relative" style={{ width: `${viewWidth}px` }}>
+          <svg
+            viewBox={`0 0 ${viewWidth} ${viewHeight}`}
+            className="h-auto max-h-[350px]"
+            style={{ width: `${viewWidth}px` }}
+          >
+            <defs>
+              <linearGradient
+                id={`report-line-${report._id}`}
+                x1="0"
+                y1="1"
+                x2="0"
+                y2="0"
+              >
+                <stop offset="0%" stopColor="#ef4444" />
+                <stop offset="100%" stopColor="#22c55e" />
+              </linearGradient>
+              <linearGradient
+                id={`report-area-${report._id}`}
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="1"
+              >
+                <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.25" />
+                <stop offset="100%" stopColor="#0f172a" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            <g opacity="0.3" stroke="#38bdf8" strokeWidth="1">
+              {[0, 0.25, 0.5, 0.75, 1].map((tick) => {
+                const y =
+                  padding.top +
+                  tick * (viewHeight - padding.top - padding.bottom);
+                return (
+                  <line
+                    key={`grid-${report._id}-${tick}`}
+                    x1={padding.left}
+                    x2={viewWidth - padding.right}
+                    y1={y}
+                    y2={y}
+                  />
+                );
+              })}
+            </g>
+            <path d={areaPath} fill={`url(#report-area-${report._id})`} />
+            <path
+              d={path}
+              fill="none"
+              stroke={`url(#report-line-${report._id})`}
+              strokeWidth="2"
+            />
+            {points.map((point, index) => {
+              const wpmValue = wpmValues[index] ?? 0;
+              const threshold = 20;
+              let red = 220;
+              let green = 38;
+              let blue = 38;
+              if (wpmValue >= threshold) {
+                const zoomRange = Math.max(1, maxWpm - threshold);
+                const intensity = Math.max(
+                  0,
+                  Math.min(1, (wpmValue - threshold) / zoomRange),
+                );
+                const low = { r: 34, g: 197, b: 94 };
+                const high = { r: 16, g: 120, b: 57 };
+                red = Math.round(low.r + (high.r - low.r) * intensity);
+                green = Math.round(low.g + (high.g - low.g) * intensity);
+                blue = Math.round(low.b + (high.b - low.b) * intensity);
+              } else {
+                const intensity = Math.max(
+                  0,
+                  Math.min(1, wpmValue / threshold),
+                );
+                const low = { r: 220, g: 38, b: 38 };
+                const high = { r: 248, g: 113, b: 113 };
+                red = Math.round(low.r + (high.r - low.r) * intensity);
+                green = Math.round(low.g + (high.g - low.g) * intensity);
+                blue = Math.round(low.b + (high.b - low.b) * intensity);
+              }
+              return (
+                <circle
+                  key={`pt-${report._id}-${index}`}
+                  cx={point.x}
+                  cy={point.y}
+                  r={hoveredIndex === index ? 4 : 3}
+                  fill={`rgb(${red}, ${green}, ${blue})`}
+                  opacity={hoveredIndex === index ? 1 : 0.85}
+                  onMouseEnter={() => setHoveredIndex(index)}
+                  onMouseLeave={() => setHoveredIndex(null)}
+                />
+              );
+            })}
+          </svg>
+
+          {hoveredIndex !== null && points[hoveredIndex] && (
+            <div
+              className="pointer-events-none absolute z-50 min-w-[150px] rounded-lg border border-white/20 bg-slate-900/95 px-3 py-2 text-xs text-slate-100 shadow-xl"
+              style={{
+                left: `${points[hoveredIndex].x}px`,
+                top: `${points[hoveredIndex].y}px`,
+                transform: `translate(${hoveredIndex > points.length * 0.7 ? "-90%" : hoveredIndex < points.length * 0.3 ? "-10%" : "-50%"}, ${points[hoveredIndex].y < 180 ? "15%" : "-110%"})`,
+              }}
+            >
+              <div className="font-semibold text-amber-200">
+                {timings[hoveredIndex]?.word || "-"}
+              </div>
+              <div className="text-slate-200/70">Index: {hoveredIndex + 1}</div>
+              <div
+                className={
+                  timings[hoveredIndex]?.status === "incorrect"
+                    ? "text-sm text-rose-200/90"
+                    : "text-sm text-emerald-200/90"
+                }
+              >
+                {timings[hoveredIndex]?.status === "incorrect"
+                  ? "Incorrect"
+                  : "Correct"}
+              </div>
+              <div className="text-cyan-200/90">
+                Time:{" "}
+                {((timings[hoveredIndex]?.durationMs || 0) / 1000).toFixed(2)}s
+              </div>
+              <div className="text-slate-200/90">
+                Strokes: {timings[hoveredIndex]?.strokeCount ?? "-"}
+              </div>
+              <div className="text-emerald-200/90">
+                Speed: {timings[hoveredIndex]?.wpm ?? 0} WPM
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }
