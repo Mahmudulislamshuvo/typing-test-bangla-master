@@ -8,6 +8,7 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
   const [expandedDevices, setExpandedDevices] = useState({});
   const [showGraphs, setShowGraphs] = useState(false);
+  const [expandedGraphs, setExpandedGraphs] = useState({});
 
   useEffect(() => {
     fetch("/api/reports")
@@ -33,6 +34,13 @@ export default function ReportsPage() {
     setExpandedDevices((prev) => ({
       ...prev,
       [deviceName]: !prev[deviceName],
+    }));
+  };
+
+  const toggleGraph = (reportId) => {
+    setExpandedGraphs((prev) => ({
+      ...prev,
+      [reportId]: !prev[reportId],
     }));
   };
 
@@ -109,58 +117,72 @@ export default function ReportsPage() {
                           <th className="px-4 py-3">Words (Corr/Tot)</th>
                           <th className="px-4 py-3">Stroke Wise Words (BN)</th>
                           <th className="px-4 py-3">Duration</th>
+                          <th className="px-4 py-3 text-center">Graph</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5">
-                        {displayedReports.map((report) => (
-                          <Fragment key={report._id}>
-                            <tr className="hover:bg-white/5">
-                              <td className="px-4 py-3">
-                                {new Date(report.date).toLocaleString()}
-                              </td>
-                              <td className="px-4 py-3 uppercase">
-                                {report.language}
-                              </td>
-                              <td className="px-4 py-3 font-semibold text-emerald-200">
-                                {report.testType || "Standard"}
-                              </td>
-                              <td className="px-4 py-3 capitalize">
-                                {report.mode}
-                              </td>
-                              <td className="px-4 py-3 font-bold text-amber-300">
-                                {report.wpm}
-                              </td>
-                              <td className="px-4 py-3 text-cyan-300">
-                                {report.accuracy}%
-                              </td>
-                              <td className="px-4 py-3 text-emerald-300">
-                                {report.correctStrokes || "-"}
-                              </td>
-                              <td className="px-4 py-3">
-                                {report.correctWords !== undefined
-                                  ? `${report.correctWords} / ${report.totalWords}`
-                                  : "-"}
-                              </td>
-                              <td className="px-4 py-3 text-teal-300">
-                                {report.strokeWiseCorrectWords || "-"}
-                              </td>
-                              <td className="px-4 py-3">
-                                {report.duration} min
-                              </td>
-                            </tr>
-                            {showGraphs && (
-                              <tr className="bg-black/20">
-                                <td
-                                  className="px-4 py-4"
-                                  colSpan={10}
-                                  style={{ maxWidth: "1px" }}
-                                >
-                                  <ReportTimingChart report={report} />
+                        {displayedReports.map((report) => {
+                          const isGraphVisible =
+                            showGraphs || expandedGraphs[report._id];
+
+                          return (
+                            <Fragment key={report._id}>
+                              <tr className="hover:bg-white/5">
+                                <td className="px-4 py-3">
+                                  {new Date(report.date).toLocaleString()}
+                                </td>
+                                <td className="px-4 py-3 uppercase">
+                                  {report.language}
+                                </td>
+                                <td className="px-4 py-3 font-semibold text-emerald-200">
+                                  {report.testType || "Standard"}
+                                </td>
+                                <td className="px-4 py-3 capitalize">
+                                  {report.mode}
+                                </td>
+                                <td className="px-4 py-3 font-bold text-amber-300">
+                                  {report.wpm}
+                                </td>
+                                <td className="px-4 py-3 text-cyan-300">
+                                  {report.accuracy}%
+                                </td>
+                                <td className="px-4 py-3 text-emerald-300">
+                                  {report.correctStrokes || "-"}
+                                </td>
+                                <td className="px-4 py-3">
+                                  {report.correctWords !== undefined
+                                    ? `${report.correctWords} / ${report.totalWords}`
+                                    : "-"}
+                                </td>
+                                <td className="px-4 py-3 text-teal-300">
+                                  {report.strokeWiseCorrectWords || "-"}
+                                </td>
+                                <td className="px-4 py-3">
+                                  {report.duration} min
+                                </td>
+                                <td className="px-4 py-3 text-center">
+                                  <button
+                                    onClick={() => toggleGraph(report._id)}
+                                    className="rounded bg-white/10 px-3 py-1.5 text-xs font-semibold text-emerald-400 transition hover:bg-white/20 hover:text-emerald-300"
+                                  >
+                                    {isGraphVisible ? "Hide" : "Show"}
+                                  </button>
                                 </td>
                               </tr>
-                            )}
-                          </Fragment>
-                        ))}
+                              {isGraphVisible && (
+                                <tr className="bg-black/20">
+                                  <td
+                                    className="px-4 py-4"
+                                    colSpan={11}
+                                    style={{ maxWidth: "1px" }}
+                                  >
+                                    <ReportTimingChart report={report} />
+                                  </td>
+                                </tr>
+                              )}
+                            </Fragment>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
