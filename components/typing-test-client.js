@@ -1136,21 +1136,41 @@ export default function TypingTestClient({
                       );
                       const isIncorrect =
                         finalWordEvaluation.wordStatuses[index] === "incorrect";
-                      const intensity = Math.max(
-                        0,
-                        Math.min(1, point.normalized ?? 0),
-                      );
-                      const low = { r: 220, g: 38, b: 38 };
-                      const high = { r: 34, g: 197, b: 94 };
-                      const red = Math.round(
-                        low.r + (high.r - low.r) * intensity,
-                      );
-                      const green = Math.round(
-                        low.g + (high.g - low.g) * intensity,
-                      );
-                      const blue = Math.round(
-                        low.b + (high.b - low.b) * intensity,
-                      );
+                      const wpmValue = timingSummary.wpmByWord[index] ?? 0;
+                      const threshold = 20;
+                      let red = 220;
+                      let green = 38;
+                      let blue = 38;
+
+                      if (wpmValue >= threshold) {
+                        const range = Math.max(
+                          1,
+                          timingChart.maxWpm - threshold,
+                        );
+                        const intensity = Math.max(
+                          0,
+                          Math.min(1, (wpmValue - threshold) / range),
+                        );
+                        const low = { r: 34, g: 197, b: 94 };
+                        const high = { r: 16, g: 120, b: 57 };
+                        red = Math.round(low.r + (high.r - low.r) * intensity);
+                        green = Math.round(
+                          low.g + (high.g - low.g) * intensity,
+                        );
+                        blue = Math.round(low.b + (high.b - low.b) * intensity);
+                      } else {
+                        const intensity = Math.max(
+                          0,
+                          Math.min(1, wpmValue / threshold),
+                        );
+                        const low = { r: 220, g: 38, b: 38 };
+                        const high = { r: 248, g: 113, b: 113 };
+                        red = Math.round(low.r + (high.r - low.r) * intensity);
+                        green = Math.round(
+                          low.g + (high.g - low.g) * intensity,
+                        );
+                        blue = Math.round(low.b + (high.b - low.b) * intensity);
+                      }
                       const pointColor = isIncorrect
                         ? "#f87171"
                         : `rgb(${red}, ${green}, ${blue})`;
