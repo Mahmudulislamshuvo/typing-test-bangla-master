@@ -367,9 +367,9 @@ export default function TypingTestClient({
       return Math.round(raw);
     });
 
-    const slowest = durations
-      .map((durationMs, index) => ({ durationMs, index }))
-      .sort((a, b) => b.durationMs - a.durationMs)
+    const slowest = wpmByWord
+      .map((wpmValue, index) => ({ wpmValue, index }))
+      .sort((a, b) => a.wpmValue - b.wpmValue)
       .slice(0, 3);
 
     return {
@@ -392,15 +392,17 @@ export default function TypingTestClient({
     const chartWidth = viewWidth - padding.left - padding.right;
     const chartHeight = viewHeight - padding.top - padding.bottom;
 
-    const range = timingSummary.maxDuration - timingSummary.minDuration || 1;
+    const maxWpm = Math.max(...timingSummary.wpmByWord, 0);
+    const minWpm = Math.min(...timingSummary.wpmByWord, 0);
+    const range = maxWpm - minWpm || 1;
 
-    const points = timingSummary.durations.map((duration, index) => {
+    const points = timingSummary.wpmByWord.map((wpmValue, index) => {
       const x =
         padding.left +
-        (index / Math.max(timingSummary.durations.length - 1, 1)) * chartWidth;
-      const normalized = (duration - timingSummary.minDuration) / range;
+        (index / Math.max(timingSummary.wpmByWord.length - 1, 1)) * chartWidth;
+      const normalized = (wpmValue - minWpm) / range;
       const y = padding.top + (1 - normalized) * chartHeight;
-      return { x, y };
+      return { x, y, normalized };
     });
 
     const path = points
@@ -421,6 +423,8 @@ export default function TypingTestClient({
       viewWidth,
       viewHeight,
       padding,
+      minWpm,
+      maxWpm,
       points,
       path,
       areaPath,
@@ -965,7 +969,7 @@ export default function TypingTestClient({
 
       {isFinished && (
         <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/65 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-3xl rounded-3xl border border-white/25 bg-[linear-gradient(145deg,#082f2d,#134e4a)] p-6 text-white shadow-[0_18px_60px_rgba(0,0,0,0.45)] sm:p-8">
+          <div className="w-full max-w-3xl max-h-[95vh] overflow-y-auto rounded-3xl border border-white/25 bg-[linear-gradient(145deg,#082f2d,#134e4a)] p-6 pr-4 text-white shadow-[0_18px_60px_rgba(0,0,0,0.45)] sm:p-8 sm:pr-6">
             <p className="text-xs uppercase tracking-[0.2em] text-amber-200/80">
               Session Complete
             </p>
@@ -1076,6 +1080,43 @@ export default function TypingTestClient({
                         );
                       })}
                     </g>
+                    {(() => {
+                      const maxWpm = Math.max(...timingSummary.wpmByWord, 0);
+                      const minWpm = Math.min(...timingSummary.wpmByWord, 0);
+                      const roundedMax = Math.max(
+                        10,
+                        Math.ceil(maxWpm / 10) * 10,
+                      );
+                      const roundedMin = Math.max(
+                        0,
+                        Math.floor(minWpm / 10) * 10,
+                      );
+                      const range = roundedMax - roundedMin || 10;
+                      const ticks = Array.from({ length: 5 }, (_, index) =>
+                        Math.round(roundedMax - (range * index) / 4),
+                      );
+                      return ticks.map((value, index) => {
+                        const y =
+                          timingChart.padding.top +
+                          (index / 4) *
+                            (timingChart.viewHeight -
+                              timingChart.padding.top -
+                              timingChart.padding.bottom) +
+                          4;
+                        return (
+                          <text
+                            key={`wpm-${value}-${index}`}
+                            x={timingChart.padding.left - 8}
+                            y={y}
+                            textAnchor="end"
+                            fill="#94a3b8"
+                            fontSize="10"
+                          >
+                            {value}
+                          </text>
+                        );
+                      });
+                    })()}
                     <path
                       d={timingChart.areaPath}
                       fill="url(#speed-area)"
@@ -1093,13 +1134,25 @@ export default function TypingTestClient({
                       const isSlow = timingSummary.slowest.some(
                         (entry) => entry.index === index,
                       );
+                      const isIncorrect =
+                        finalWordEvaluation.wordStatuses[index] === "incorrect";
+                      const intensity = Math.max(
+                        0,
+                        Math.min(1, point.normalized ?? 0),
+                      );
+                      const red = Math.round(248 - intensity * 88);
+                      const green = Math.round(113 + intensity * 96);
+                      const blue = Math.round(113 - intensity * 64);
+                      const pointColor = isIncorrect
+                        ? "#f87171"
+                        : `rgb(${red}, ${green}, ${blue})`;
                       return (
                         <circle
                           key={`point-${index}`}
                           cx={point.x}
                           cy={point.y}
                           r={isHovered ? 5 : isSlow ? 4 : 3}
-                          fill={isSlow ? "#f97316" : "#38bdf8"}
+                          fill={pointColor}
                           opacity={isHovered ? 1 : 0.8}
                           onMouseEnter={() => setHoveredWordIndex(index)}
                           onMouseLeave={() => setHoveredWordIndex(null)}
@@ -1111,17 +1164,41 @@ export default function TypingTestClient({
                   {hoveredWordIndex !== null &&
                     timingChart.points[hoveredWordIndex] && (
                       <div
-                        className="pointer-events-none absolute -translate-y-2 rounded-lg border border-white/20 bg-slate-900/90 px-3 py-2 text-xs text-slate-100 shadow-lg"
+                        className="pointer-events-none absolute rounded-lg border border-white/20 bg-slate-900/90 px-3 py-2 text-xs text-slate-100 shadow-lg"
                         style={{
                           left: `${(timingChart.points[hoveredWordIndex].x / timingChart.viewWidth) * 100}%`,
                           top: `${(timingChart.points[hoveredWordIndex].y / timingChart.viewHeight) * 100}%`,
+                          transform: "translate(-45%, -135%)",
                         }}
                       >
-                        <div className="font-semibold text-amber-200">
+                        <div
+                          className={`font-semibold ${
+                            finalWordEvaluation.wordStatuses[
+                              hoveredWordIndex
+                            ] === "incorrect"
+                              ? "text-rose-200"
+                              : "text-amber-200"
+                          }`}
+                        >
                           {wordTimings[hoveredWordIndex]?.word || "-"}
                         </div>
                         <div className="text-slate-200/70">
                           Index: {hoveredWordIndex + 1}
+                        </div>
+                        <div
+                          className={
+                            finalWordEvaluation.wordStatuses[
+                              hoveredWordIndex
+                            ] === "incorrect"
+                              ? "text-sm text-rose-200/90"
+                              : "text-sm text-emerald-200/90"
+                          }
+                        >
+                          {finalWordEvaluation.wordStatuses[
+                            hoveredWordIndex
+                          ] === "incorrect"
+                            ? "Incorrect"
+                            : "Correct"}
                         </div>
                         <div className="text-cyan-200/90">
                           Time:{" "}
