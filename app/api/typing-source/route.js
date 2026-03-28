@@ -21,8 +21,9 @@ export async function GET(request) {
     // Fallback if it returns just array (though we updated it to return object)
     const words = Array.isArray(result) ? result : result.words;
     const totalDocs = result.totalDocs || 0;
+    const usedIndex = result.usedIndex ?? forceIndex;
 
-    return NextResponse.json({ words, totalDocs, usedIndex: forceIndex });
+    return NextResponse.json({ words, totalDocs, usedIndex });
   } catch (error) {
     return NextResponse.json(
       { error: error?.message || "Failed to load typing source." },

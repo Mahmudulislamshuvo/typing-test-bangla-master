@@ -208,6 +208,7 @@ export default function TypingTestClient({
   const skipInitialSelectionReloadRef = useRef(true);
   const lastWordCountRef = useRef(0);
   const lastTypingTimeRef = useRef(null);
+  const fullDocModeRef = useRef(true);
 
   // Track seen documents to cycle through them randomly without repetition
   // Key format: `${lang}-${duration}` -> [shuffled_indices]
@@ -491,35 +492,11 @@ export default function TypingTestClient({
 
   const fetchWordChunk = useCallback(
     async (lang, minutes, count = 160) => {
-      // Only determine index for initial load, not for "append" calls which just need random chunks?
-      // Actually, "appendMoreWords" is for infinite scroll. If we are infinite scrolling, we probably just want MORE of the SAME document if possible?
-      // But currently backend randomizes snippet if index -1.
-      // If we want consistent flow, we should probably stick to the same index?
-      // BUT the backend function cycles within the document if we force index.
-      // So for "appendMoreWords", we should probably REUSE standard index if we had one.
-      // However, "appendMoreWords" calls with same lang/minutes.
-      // Let's decide: "New Stream" triggers a NEW index. "Append" uses... random? Or same?
-      // If we use same index, we get same doc content recycled.
-      // If we use -1, we get random snippets from random docs.
-      // The user wants "cycle through 20 docs". This implies "New Stream" = Next Doc.
-      // So infinite scroll within a test should just provide MORE words. Random snippets is fine for extending a test, or same doc.
-      // Let's just use -1 for appending to keep it simple/robust, or use current index?
-      // Let's use -1 for append for now to avoid complexity of tracking current index in state.
-      // Wait, "New Stream" calls this.
-
-      // We need to differentiate between "New Stream" (get next doc) and "Append" (get more words).
-      // The caller of fetchWordChunk doesn't specify purpose.
-      // But replaceSource calls it with 220 words (initial), append calls with 180.
-
       let forceIndex = -1;
       const key = `${lang}-${minutes}`;
-
-      // If it's a "New Stream" (count > 200, heuristic), pick next document.
-      if (count > 200) {
-        const knownTotal = totalDocsRef.current[key] || 0;
-        if (knownTotal > 0) {
-          forceIndex = getNextIndex(key, knownTotal);
-        }
+      const knownTotal = totalDocsRef.current[key] || 0;
+      if (knownTotal > 0) {
+        forceIndex = getNextIndex(key, knownTotal);
       }
 
       const params = new URLSearchParams({
@@ -542,8 +519,19 @@ export default function TypingTestClient({
       // Update known total docs for this category
       if (payload.totalDocs) {
         totalDocsRef.current[key] = payload.totalDocs;
-        // If we didn't have a total before, we might want to init the playlist now?
-        // Next time we call getNextIndex, it will use this total.
+        if (forceIndex === -1 && Number.isInteger(payload.usedIndex)) {
+          if (
+            !playlistRef.current[key] ||
+            playlistRef.current[key].length === 0
+          ) {
+            const indices = Array.from(
+              { length: payload.totalDocs },
+              (_, i) => i,
+            ).filter((index) => index !== payload.usedIndex);
+            playlistRef.current[key] = shuffleArray(indices);
+            savePlaylist();
+          }
+        }
       }
 
       const words = Array.isArray(payload?.words)
@@ -558,7 +546,7 @@ export default function TypingTestClient({
 
       return words;
     },
-    [getNextIndex],
+    [getNextIndex, savePlaylist],
   );
 
   const replaceSource = useCallback(
@@ -620,6 +608,7 @@ export default function TypingTestClient({
   }, [durationMin, language, replaceSource, targetWords.length]);
 
   useEffect(() => {
+    if (fullDocModeRef.current) return;
     if (isLoadingSource || isFinished || loadError) return;
     const remainingWords = targetWords.length - liveTypedWords.length;
     if (remainingWords < 80) {
