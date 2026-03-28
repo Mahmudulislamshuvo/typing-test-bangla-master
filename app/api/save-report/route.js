@@ -13,8 +13,9 @@ export async function POST(req) {
 
     // Broadcast the new report to connected clients via Pusher
     if (pusherServer) {
+      const payload = report.toObject ? report.toObject() : report;
       pusherServer
-        .trigger("reports-channel", "new-report", report)
+        .trigger("reports-channel", "new-report", payload)
         .catch((err) => console.error("Pusher trigger error:", err));
     }
 
