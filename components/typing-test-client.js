@@ -674,10 +674,10 @@ export default function TypingTestClient({
       let next = [...prev];
       if (newCount > prevCount) {
         const completed = wordsNow.slice(prevCount, newCount);
-        const startTime = wordStartTimeRef.current ?? now;
         const entries = completed.map((word) => ({
           word,
-          durationMs: Math.max(0, now - startTime),
+          startTime: wordStartTimeRef.current ?? now,
+          durationMs: Math.max(0, now - (wordStartTimeRef.current ?? now)),
           endTime: now,
         }));
         next = [...next, ...entries];
@@ -686,8 +686,15 @@ export default function TypingTestClient({
       }
 
       for (let i = 0; i < newCount; i++) {
-        if (next[i] && next[i].word !== wordsNow[i]) {
-          next[i] = { ...next[i], word: wordsNow[i] };
+        if (next[i]) {
+          if (next[i].word !== wordsNow[i]) {
+            next[i] = { ...next[i], word: wordsNow[i] };
+          }
+          if (i === newCount - 1) {
+            const start = next[i].startTime ?? wordStartTimeRef.current ?? now;
+            next[i].durationMs = Math.max(0, now - start);
+            next[i].endTime = now;
+          }
         }
       }
       return next;
