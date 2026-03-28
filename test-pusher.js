@@ -1,0 +1,1 @@
+const Pusher = require('pusher'); const pusher = new Pusher({ appId: '2133952', key: 'd54fa9dfb95e5e94fba5', secret: '20dcdb52d2bcc632c1dd', cluster: 'ap2', useTLS: true }); pusher.trigger('reports-channel', 'new-report', { test: 'hello' }).then(res => console.log('Success:', res.status)).catch(err => console.error(err));

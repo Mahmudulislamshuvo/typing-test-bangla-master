@@ -3,6 +3,7 @@
 import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
 import PusherClient from "pusher-js";
+import toast, { Toaster } from "react-hot-toast";
 
 export default function ReportsPage() {
   const [groupedReports, setGroupedReports] = useState({});
@@ -41,12 +42,25 @@ export default function ReportsPage() {
 
     let pusher = null;
     if (process.env.NEXT_PUBLIC_PUSHER_KEY) {
+      // Enable pusher logging for debugging explicitly outside production
+      PusherClient.logToConsole = process.env.NODE_ENV !== "production";
+
       pusher = new PusherClient(process.env.NEXT_PUBLIC_PUSHER_KEY, {
         cluster: process.env.NEXT_PUBLIC_PUSHER_CLUSTER,
       });
 
       const channel = pusher.subscribe("reports-channel");
       channel.bind("new-report", (newReport) => {
+        toast.success(`নতুন রেজাল্ট যুক্ত হয়েছে: ${newReport.deviceName}`, {
+          duration: 4000,
+          position: "top-right",
+          style: {
+            background: "#1e293b",
+            color: "#34d399",
+            border: "1px solid #0f766e",
+          },
+        });
+
         setGroupedReports((prev) => {
           const updated = { ...prev };
           if (!updated[newReport.deviceName]) {
@@ -95,6 +109,7 @@ export default function ReportsPage() {
 
   return (
     <main className="min-h-screen bg-slate-950 p-6 text-slate-200">
+      <Toaster />
       <div className="mx-auto max-w-6xl">
         <header className="mb-8 flex items-center justify-between">
           <h1 className="text-3xl font-bold text-white">Typing Reports</h1>
