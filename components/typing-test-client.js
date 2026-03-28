@@ -1397,19 +1397,45 @@ export default function TypingTestClient({
                 </p>
               )}
 
-              {timingSummary && timingSummary.slowest.length > 0 && (
-                <div className="mt-3 text-xs text-slate-200/80">
-                  Slowest words:{" "}
-                  {timingSummary.slowest.map((entry, index) => {
-                    const label = wordTimings[entry.index]?.word || "-";
-                    const time = (entry.durationMs / 1000).toFixed(2);
+              {timingSummary && (
+                <div className="mt-3 text-base text-slate-200/80 sm:text-lg">
+                  {(() => {
+                    const slowEntries = timingSummary.wpmByWord
+                      .map((wpmValue, index) => ({ wpmValue, index }))
+                      .filter((entry) => entry.wpmValue < 20);
+
+                    if (slowEntries.length === 0) {
+                      return (
+                        <span className="text-slate-300">
+                          No words under 20 WPM.
+                        </span>
+                      );
+                    }
+
                     return (
-                      <span key={`slow-${entry.index}`}>
-                        {index > 0 ? ", " : ""}
-                        {label} ({time}s)
+                      <span>
+                        Words under 20 WPM:{" "}
+                        {slowEntries.map((entry, index) => {
+                          const label = wordTimings[entry.index]?.word || "-";
+                          const time = (
+                            (wordTimings[entry.index]?.durationMs || 0) / 1000
+                          ).toFixed(2);
+
+                          return (
+                            <span key={`slow-${entry.index}`}>
+                              {index > 0 ? ", " : ""}
+                              <span className="font-semibold text-rose-500">
+                                {label}
+                              </span>{" "}
+                              <span className="font-medium text-amber-300">
+                                ({time}s)
+                              </span>
+                            </span>
+                          );
+                        })}
                       </span>
                     );
-                  })}
+                  })()}
                 </div>
               )}
             </section>

@@ -279,6 +279,7 @@ function ReportTimingChart({ report }) {
   const maxWpm = Math.max(...wpmValues, 0);
   const minWpm = Math.min(...wpmValues, 0);
   const range = maxWpm - minWpm || 1;
+  const isBangla = report.language === "bn";
 
   const baseViewWidth = 640;
   const viewHeight = 280;
@@ -413,7 +414,7 @@ function ReportTimingChart({ report }) {
                   key={`pt-${report._id}-${index}`}
                   cx={point.x}
                   cy={point.y}
-                  r={hoveredIndex === index ? 4 : 3}
+                  r={hoveredIndex === index ? 8 : wpmValue < threshold ? 6 : 5}
                   fill={`rgb(${red}, ${green}, ${blue})`}
                   opacity={hoveredIndex === index ? 1 : 0.85}
                   onMouseEnter={() => setHoveredIndex(index)}
@@ -458,6 +459,72 @@ function ReportTimingChart({ report }) {
                 Speed: {timings[hoveredIndex]?.wpm ?? 0} WPM
               </div>
             </div>
+          )}
+        </div>
+      </div>
+      <div className="mt-5 rounded-xl border border-white/10 bg-black/25 p-3">
+        <h4 className="text-sm font-bold uppercase tracking-[0.14em] text-cyan-100">
+          {isBangla ? "শব্দভিত্তিক সময়ের রিপোর্ট" : "Word Time Document"}
+        </h4>
+        <div className="mt-3 max-h-64 overflow-y-auto rounded-xl bg-slate-950/45 p-3">
+          <table className="w-full text-left text-sm text-slate-200 relative whitespace-nowrap">
+            <thead className="sticky top-0 bg-slate-900 shadow-md">
+              <tr>
+                <th className="px-4 py-3 font-semibold text-slate-300 rounded-tl-lg">
+                  #
+                </th>
+                <th
+                  className={`px-4 py-3 font-semibold text-slate-300 ${
+                    isBangla ? "[font-family:var(--font-bengali)]" : ""
+                  }`}
+                >
+                  {isBangla ? "শব্দ" : "Word"}
+                </th>
+                <th className="px-4 py-3 font-semibold text-slate-300">
+                  {isBangla ? "সময় (সেকেন্ড)" : "Time (s)"}
+                </th>
+                <th className="px-4 py-3 font-semibold text-slate-300 rounded-tr-lg">
+                  WPM
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {timings.map((entry, idx) => {
+                const wpmVal = entry.wpm || 0;
+                const isSlowWpm = wpmVal < 20;
+                const timeValue = ((entry.durationMs || 0) / 1000).toFixed(2);
+                const highlightClass = isSlowWpm
+                  ? "text-rose-400"
+                  : "text-emerald-300";
+
+                return (
+                  <tr
+                    key={`doc-row-${report._id}-${idx}`}
+                    className="hover:bg-slate-800/40 transition"
+                  >
+                    <td className="px-4 py-2 text-slate-400/80">{idx + 1}</td>
+                    <td
+                      className={`px-4 py-2 font-medium ${highlightClass} ${
+                        isBangla ? "[font-family:var(--font-bengali)]" : ""
+                      }`}
+                    >
+                      {entry.word || "-"}
+                    </td>
+                    <td className={`px-4 py-2 font-mono ${highlightClass}`}>
+                      {timeValue}s
+                    </td>
+                    <td className={`px-4 py-2 font-mono ${highlightClass}`}>
+                      {wpmVal}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {timings.length === 0 && (
+            <p className="p-4 text-center text-slate-400/80">
+              {isBangla ? "কোন ডাটা পাওয়া যায়নি।" : "No data available."}
+            </p>
           )}
         </div>
       </div>
