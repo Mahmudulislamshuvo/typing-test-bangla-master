@@ -670,18 +670,30 @@ export default function TypingTestClient({
     const newCount = wordsNow.length;
     const prevCount = lastWordCountRef.current;
 
-    if (newCount > prevCount) {
-      const completed = wordsNow.slice(prevCount, newCount);
-      const startTime = wordStartTimeRef.current ?? now;
-      const entries = completed.map((word) => ({
-        word,
-        durationMs: Math.max(0, now - startTime),
-        endTime: now,
-      }));
-      setWordTimings((prev) => [...prev, ...entries]);
-      wordStartTimeRef.current = now;
-    } else if (newCount < prevCount) {
-      setWordTimings((prev) => prev.slice(0, newCount));
+    setWordTimings((prev) => {
+      let next = [...prev];
+      if (newCount > prevCount) {
+        const completed = wordsNow.slice(prevCount, newCount);
+        const startTime = wordStartTimeRef.current ?? now;
+        const entries = completed.map((word) => ({
+          word,
+          durationMs: Math.max(0, now - startTime),
+          endTime: now,
+        }));
+        next = [...next, ...entries];
+      } else if (newCount < prevCount) {
+        next = next.slice(0, newCount);
+      }
+
+      for (let i = 0; i < newCount; i++) {
+        if (next[i] && next[i].word !== wordsNow[i]) {
+          next[i] = { ...next[i], word: wordsNow[i] };
+        }
+      }
+      return next;
+    });
+
+    if (newCount !== prevCount) {
       wordStartTimeRef.current = now;
     }
 
