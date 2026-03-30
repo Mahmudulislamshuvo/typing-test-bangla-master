@@ -280,6 +280,12 @@ function ReportTimingChart({ report }) {
   const minWpm = Math.min(...wpmValues, 0);
   const range = maxWpm - minWpm || 1;
   const isBangla = report.language === "bn";
+  const sortedTimings = [...timings]
+    .map((entry, index) => ({ ...entry, _index: index }))
+    .sort((a, b) => {
+      const diff = (a.wpm || 0) - (b.wpm || 0);
+      return diff !== 0 ? diff : a._index - b._index;
+    });
 
   const baseViewWidth = 640;
   const viewHeight = 280;
@@ -466,7 +472,7 @@ function ReportTimingChart({ report }) {
         <h4 className="text-sm font-bold uppercase tracking-[0.14em] text-cyan-100">
           {isBangla ? "শব্দভিত্তিক সময়ের রিপোর্ট" : "Word Time Document"}
         </h4>
-        <div className="mt-3 max-h-64 overflow-y-auto rounded-xl bg-slate-950/45 p-3">
+        <div className="mt-3 max-h-[70vh] overflow-y-auto rounded-xl bg-slate-950/45 p-3">
           <table className="w-full text-left text-sm text-slate-200 relative whitespace-nowrap">
             <thead className="sticky top-0 bg-slate-900 shadow-md">
               <tr>
@@ -489,7 +495,7 @@ function ReportTimingChart({ report }) {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/5">
-              {timings.map((entry, idx) => {
+              {sortedTimings.map((entry, idx) => {
                 const wpmVal = entry.wpm || 0;
                 const isSlowWpm = wpmVal < 20;
                 const timeValue = ((entry.durationMs || 0) / 1000).toFixed(2);
