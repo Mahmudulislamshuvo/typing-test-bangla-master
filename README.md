@@ -1,15 +1,23 @@
 # Bilingual Typing Test (English + Bengali)
 
-A modern Next.js + Tailwind typing test app with:
+একটি আধুনিক Next.js + Tailwind টাইপিং টেস্ট অ্যাপ যেখানে ইংরেজি ও বাংলায় টাইপিং প্র্যাকটিস করা যায়।
 
-- Language switcher (`English` / `বাংলা`)
-- Timer durations (`1`, `2`, `3`, `5`, `10`, `15`, `20` minutes)
-- Dynamic text loading from timer-specific local JSON files
-- Unicode-aware Bengali typing support
-- Real-time highlighting (correct/incorrect/current character)
-- Real-time `WPM`, `Accuracy`, and `Errors`
-- Anti-cheat protections for paste/copy/cut/drop
-- Final result modal with restart flow
+## Highlights
+
+- ভাষা নির্বাচন (English / বাংলা)
+- সময় বাছাই: 1, 2, 3, 5, 10, 15, 20 মিনিট
+- টাইমার অনুযায়ী JSON ডেটা থেকে ডাইনামিক টেক্সট লোড
+- বাংলা Unicode-aware টাইপিং সাপোর্ট
+- লাইভ WPM, Accuracy, Errors
+- কপি/পেস্ট/ড্র্যাগ প্রতিরোধ (anti-cheat)
+- টেস্ট শেষে রেজাল্ট ভিউ + রিপোর্ট সেভ
+- রিপোর্ট পেজে ডিভাইসভিত্তিক তালিকা ও গ্রাফ
+
+## Tech Stack
+
+- Next.js (App Router)
+- Tailwind CSS
+- React
 
 ## Run Locally
 
@@ -18,18 +26,20 @@ npm install
 npm run dev
 ```
 
-Open `http://localhost:3000`.
+তারপর ব্রাউজারে খুলুন: http://localhost:3000
 
 ## Data Files
 
-Datasets live in `public/data/` and are named by language + timer:
+ডেটাসেট রাখা আছে public/data/ এ। ফাইল নামের ফরম্যাট: ভাষা + সময়।
 
-- `en-1min.json`, `en-2min.json`, `en-3min.json`, `en-5min.json`, `en-10min.json`, `en-15min.json`, `en-20min.json`
-- `bn-1min.json`, `bn-2min.json`, `bn-3min.json`, `bn-5min.json`, `bn-10min.json`, `bn-15min.json`, `bn-20min.json`
+উদাহরণ:
 
-The app fetches one file based on current selection and picks one random document.
+- en-1min.json, en-2min.json, en-3min.json, en-5min.json, en-10min.json, en-15min.json, en-20min.json
+- bn-1min.json, bn-2min.json, bn-3min.json, bn-5min.json, bn-10min.json, bn-15min.json, bn-20min.json
 
-Example structure:
+অ্যাপটি সিলেকশনের উপর ভিত্তি করে সংশ্লিষ্ট ফাইল থেকে একটি র‍্যান্ডম ডকুমেন্ট নেয়।
+
+## JSON Format (Example)
 
 ```json
 {
@@ -45,4 +55,15 @@ Example structure:
 }
 ```
 
-You can scale each file to 1000+ documents by appending more items to `documents`.
+আপনি চাইলে documents এ আরও আইটেম যোগ করে ডেটাসেট বড় করতে পারেন।
+
+## Folder Overview (Quick)
+
+- app/ → পেজ ও রাউট
+- components/ → UI কম্পোনেন্ট
+- lib/ → ইউটিলিটি ও ডেটা লোডার
+- public/data/ → টাইপিং ডেটাসেট
+
+## Notes
+
+- বাংলা টেক্সট ইনপুটে Unicode normalize ব্যবহার করা হয়, তাই ডিফারেন্ট কম্বিনেশনের লেখাও সঠিকভাবে ম্যাচ হয়।
