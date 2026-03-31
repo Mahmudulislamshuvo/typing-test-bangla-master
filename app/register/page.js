@@ -42,8 +42,42 @@ export default function RegisterPage() {
             </span>
           </div>
 
-          <form className="mt-6 space-y-5">
-            <label className="block text-sm text-slate-300" htmlFor="register-name">
+          <button
+            type="button"
+            className="mt-6 flex w-full items-center justify-center gap-3 rounded-xl border border-slate-700 bg-slate-900/70 px-4 py-3 text-sm font-semibold text-slate-100 transition hover:border-emerald-400/50 hover:bg-slate-900"
+          >
+            <svg aria-hidden="true" className="h-5 w-5" viewBox="0 0 48 48">
+              <path
+                fill="#EA4335"
+                d="M24 9.5c3.54 0 6.73 1.23 9.24 3.24l6.9-6.9C35.9 1.77 30.28-.5 24-.5 14.6-.5 6.51 4.9 2.63 12.85l8.04 6.24C12.73 13.2 17.95 9.5 24 9.5z"
+              />
+              <path
+                fill="#4285F4"
+                d="M46.5 24.5c0-1.62-.15-3.18-.42-4.7H24v9.4h12.7c-.55 2.97-2.2 5.48-4.7 7.18l7.2 5.57c4.2-3.88 6.6-9.6 6.6-17.45z"
+              />
+              <path
+                fill="#FBBC05"
+                d="M10.67 28.33a14.5 14.5 0 0 1-.76-4.33c0-1.5.26-2.95.76-4.33l-8.04-6.24A23.98 23.98 0 0 0 .5 24c0 3.9.94 7.58 2.63 10.85l8.04-6.52z"
+              />
+              <path
+                fill="#34A853"
+                d="M24 47.5c6.28 0 11.57-2.07 15.43-5.63l-7.2-5.57c-2 1.35-4.55 2.15-8.23 2.15-6.05 0-11.27-3.7-13.33-8.86l-8.04 6.52C6.51 43.1 14.6 47.5 24 47.5z"
+              />
+            </svg>
+            Continue with Google
+          </button>
+
+          <div className="my-6 flex items-center gap-3 text-xs uppercase tracking-[0.3em] text-slate-400">
+            <span className="h-px flex-1 bg-slate-700/70" />
+            or
+            <span className="h-px flex-1 bg-slate-700/70" />
+          </div>
+
+          <form className="space-y-5">
+            <label
+              className="block text-sm text-slate-300"
+              htmlFor="register-name"
+            >
               Full name
               <input
                 id="register-name"
@@ -56,7 +90,10 @@ export default function RegisterPage() {
               />
             </label>
 
-            <label className="block text-sm text-slate-300" htmlFor="register-email">
+            <label
+              className="block text-sm text-slate-300"
+              htmlFor="register-email"
+            >
               Email address
               <input
                 id="register-email"
