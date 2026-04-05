@@ -1143,6 +1143,12 @@ export default function TypingTestClient({
                   )}
                 />
               )}
+              {isUnlimited && (
+                <FinishRow
+                  label="Total Time"
+                  value={formatDuration(customElapsedSeconds)}
+                />
+              )}
               <FinishRow label="Final WPM (Per Minute)" value={String(wpm)} />
               <FinishRow
                 label="Total Typed Words"
@@ -1553,6 +1559,25 @@ function StatCard({ label, value }) {
       </p>
     </article>
   );
+}
+
+function formatDuration(totalSeconds) {
+  const safeSeconds = Math.max(0, Math.floor(totalSeconds));
+  const hours = Math.floor(safeSeconds / 3600);
+  const minutes = Math.floor((safeSeconds % 3600) / 60);
+  const seconds = safeSeconds % 60;
+
+  if (hours > 0) {
+    return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
+      2,
+      "0",
+    )}:${String(seconds).padStart(2, "0")}`;
+  }
+
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
+    2,
+    "0",
+  )}`;
 }
 
 function FinishRow({ label, value }) {
