@@ -174,6 +174,47 @@ function getTargetSlice(targetWords, typedWordCount, isFinal) {
   return targetWords.slice(0, length);
 }
 
+function getWordStartIndex(targetWords, wordIndex) {
+  let index = 0;
+  const maxIndex = Math.max(0, Math.min(wordIndex, targetWords.length));
+
+  for (let i = 0; i < maxIndex; i += 1) {
+    index += targetWords[i].length + 1;
+  }
+
+  return index;
+}
+
+function buildPassageCharStates(targetWords, typedWords, locale) {
+  const states = [];
+  let cursor = 0;
+
+  for (let i = 0; i < targetWords.length; i += 1) {
+    const targetWord = targetWords[i] || "";
+    const typedWord = typedWords[i] || "";
+    const targetChars = splitGraphemes(targetWord, locale);
+    const typedChars = splitGraphemes(typedWord, locale);
+
+    for (let j = 0; j < targetChars.length; j += 1) {
+      if (typedChars.length > j) {
+        states[cursor + j] =
+          typedChars[j] === targetChars[j] ? "correct" : "incorrect";
+      } else {
+        states[cursor + j] = "pending";
+      }
+    }
+
+    cursor += targetChars.length;
+
+    if (i < targetWords.length - 1) {
+      states[cursor] = "space";
+      cursor += 1;
+    }
+  }
+
+  return states;
+}
+
 function buildCustomWords(text, lang) {
   const normalized = normalizeText(text, lang).replace(/\n/g, " ");
   const words = (normalized.match(/\S+/gu) || []).map((word) => word.trim());
@@ -506,10 +547,45 @@ export default function TypingTestClient({
         timeLeft % 60,
       ).padStart(2, "0")}`;
 
-  const currentCharIndex = Math.min(
+  const currentCharIndex = useMemo(() => {
+    const maxCharIndex = Math.max(targetChars.length - 1, 0);
+
+    if (displayMode !== "passage") {
+      return Math.min(typedChars.length, maxCharIndex);
+    }
+
+    const hasTrailingSpace = /\s$/u.test(typedText);
+    const maxWordIndex = Math.max(targetWords.length - 1, 0);
+
+    if (hasTrailingSpace) {
+      const nextWordIndex = Math.min(liveTypedWords.length, targetWords.length);
+      const wordStartIndex = getWordStartIndex(targetWords, nextWordIndex);
+      return Math.min(wordStartIndex, maxCharIndex);
+    }
+
+    const currentWordIndex = Math.min(
+      Math.max(finalTypedWords.length - 1, 0),
+      maxWordIndex,
+    );
+    const currentWord = finalTypedWords[currentWordIndex] || "";
+    const currentWordLength = splitGraphemes(currentWord, locale).length;
+    const wordStartIndex = getWordStartIndex(targetWords, currentWordIndex);
+    return Math.min(wordStartIndex + currentWordLength, maxCharIndex);
+  }, [
+    displayMode,
+    finalTypedWords,
+    liveTypedWords.length,
+    locale,
+    targetChars.length,
+    targetWords,
     typedChars.length,
-    Math.max(targetChars.length - 1, 0),
-  );
+    typedText,
+  ]);
+
+  const passageCharStates = useMemo(() => {
+    if (displayMode !== "passage") return null;
+    return buildPassageCharStates(targetWords, finalTypedWords, locale);
+  }, [displayMode, finalTypedWords, locale, targetWords]);
 
   const passageWindow = useMemo(() => {
     const start = Math.max(0, currentCharIndex - 220);
@@ -1048,12 +1124,16 @@ export default function TypingTestClient({
                 const absoluteIndex = passageWindow.start + index;
                 let className = "text-emerald-50/60";
 
-                if (absoluteIndex < typedChars.length) {
-                  className =
-                    typedChars[absoluteIndex] === char
-                      ? "text-emerald-300"
-                      : "text-rose-300";
-                } else if (!isFinished && absoluteIndex === currentCharIndex) {
+                if (passageCharStates) {
+                  const status = passageCharStates[absoluteIndex];
+                  if (status === "correct") {
+                    className = "text-emerald-300";
+                  } else if (status === "incorrect") {
+                    className = "text-rose-300";
+                  }
+                }
+
+                if (!isFinished && absoluteIndex === currentCharIndex) {
                   className =
                     "rounded bg-amber-300 px-[1px] text-slate-900 shadow-[0_0_0_1px_rgba(251,191,36,0.45)]";
                 }
