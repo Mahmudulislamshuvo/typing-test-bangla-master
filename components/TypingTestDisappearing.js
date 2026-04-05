@@ -40,6 +40,8 @@ export default function TypingTestDisappearing({
   initialLanguage,
   initialDuration,
   initialWords,
+  initialTotalDocs = 0,
+  initialUsedIndex = -1,
 }) {
   const [language, setLanguage] = useState(initialLanguage);
   const [durationMin, setDurationMin] = useState(initialDuration);
@@ -67,18 +69,6 @@ export default function TypingTestDisappearing({
   const playlistRef = useRef({});
   const totalDocsRef = useRef({});
 
-  // Initialize playlist from localStorage on mount
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem("typing-test-playlist");
-      if (stored) {
-        playlistRef.current = JSON.parse(stored);
-      }
-    } catch (e) {
-      console.error("Failed to load playlist", e);
-    }
-  }, []);
-
   const savePlaylist = useCallback(() => {
     try {
       localStorage.setItem(
@@ -89,6 +79,49 @@ export default function TypingTestDisappearing({
       console.error("Failed to save playlist", e);
     }
   }, []);
+
+  // Initialize playlist from localStorage on mount and seed initial index.
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("typing-test-playlist");
+      if (stored) {
+        playlistRef.current = JSON.parse(stored);
+      }
+    } catch (e) {
+      console.error("Failed to load playlist", e);
+    }
+
+    const key = `${initialLanguage}-${initialDuration}`;
+    const hasTotal = Number.isInteger(initialTotalDocs) && initialTotalDocs > 0;
+    const hasUsedIndex =
+      Number.isInteger(initialUsedIndex) && initialUsedIndex >= 0;
+
+    if (hasTotal) {
+      totalDocsRef.current[key] = initialTotalDocs;
+    }
+
+    if (hasTotal && hasUsedIndex) {
+      const existing = playlistRef.current[key];
+      if (Array.isArray(existing) && existing.length > 0) {
+        playlistRef.current[key] = existing.filter(
+          (index) => index !== initialUsedIndex,
+        );
+      } else {
+        const indices = Array.from(
+          { length: initialTotalDocs },
+          (_, i) => i,
+        ).filter((index) => index !== initialUsedIndex);
+        playlistRef.current[key] = shuffleArray(indices);
+      }
+      savePlaylist();
+    }
+  }, [
+    initialDuration,
+    initialLanguage,
+    initialTotalDocs,
+    initialUsedIndex,
+    savePlaylist,
+  ]);
 
   const getNextIndex = useCallback(
     (key, totalDocs) => {
@@ -296,6 +329,21 @@ export default function TypingTestDisappearing({
       // Update known total docs for this category
       if (payload.totalDocs) {
         totalDocsRef.current[key] = payload.totalDocs;
+        if (forceIndex === -1 && Number.isInteger(payload.usedIndex)) {
+          const existing = playlistRef.current[key];
+          if (Array.isArray(existing) && existing.length > 0) {
+            playlistRef.current[key] = existing.filter(
+              (index) => index !== payload.usedIndex,
+            );
+          } else {
+            const indices = Array.from(
+              { length: payload.totalDocs },
+              (_, i) => i,
+            ).filter((index) => index !== payload.usedIndex);
+            playlistRef.current[key] = shuffleArray(indices);
+          }
+          savePlaylist();
+        }
       }
 
       const words = Array.isArray(payload?.words)
@@ -310,7 +358,7 @@ export default function TypingTestDisappearing({
 
       return words;
     },
-    [getNextIndex],
+    [getNextIndex, savePlaylist],
   );
 
   const replaceSource = useCallback(
