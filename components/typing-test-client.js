@@ -174,6 +174,12 @@ function getTargetSlice(targetWords, typedWordCount, isFinal) {
   return targetWords.slice(0, length);
 }
 
+function buildCustomWords(text, lang) {
+  const normalized = normalizeText(text, lang).replace(/\n/g, " ");
+  const words = (normalized.match(/\S+/gu) || []).map((word) => word.trim());
+  return words.filter(Boolean);
+}
+
 function shuffleArray(array) {
   const newArray = [...array];
   for (let i = newArray.length - 1; i > 0; i--) {
@@ -189,7 +195,10 @@ export default function TypingTestClient({
   initialWords,
   initialTotalDocs = 0,
   initialUsedIndex = -1,
+  sourceMode = "remote",
+  customSourceText = "",
 }) {
+  const isCustomSource = sourceMode === "custom";
   const [language, setLanguage] = useState(initialLanguage);
   const [durationMin, setDurationMin] = useState(initialDuration);
   const [displayMode, setDisplayMode] = useState("passage");
@@ -201,7 +210,10 @@ export default function TypingTestClient({
   const [timeLeft, setTimeLeft] = useState(initialDuration * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
-  const [isLoadingSource, setIsLoadingSource] = useState(!initialWords?.length);
+  const [customElapsedSeconds, setCustomElapsedSeconds] = useState(0);
+  const [isLoadingSource, setIsLoadingSource] = useState(
+    !initialWords?.length && !isCustomSource,
+  );
   const [loadError, setLoadError] = useState("");
   const [hoveredWordIndex, setHoveredWordIndex] = useState(null);
   const [chartZoom, setChartZoom] = useState(1);
@@ -290,8 +302,12 @@ export default function TypingTestClient({
     [savePlaylist],
   );
 
+  const isUnlimited = isCustomSource && durationMin === 0;
   const locale = language === "bn" ? "bn" : "en";
   const totalSeconds = durationMin * 60;
+  const durationOptions = isCustomSource
+    ? [...DURATION_OPTIONS, 0]
+    : DURATION_OPTIONS;
 
   const targetText = useMemo(() => targetWords.join(" "), [targetWords]);
   const targetChars = useMemo(
@@ -467,7 +483,9 @@ export default function TypingTestClient({
     };
   }, [chartZoom, timingSummary]);
 
-  const elapsedSeconds = totalSeconds - timeLeft;
+  const elapsedSeconds = isCustomSource
+    ? customElapsedSeconds
+    : totalSeconds - timeLeft;
   const standardWordsTyped = progress.typedKeystrokes / 5;
   const wpm =
     elapsedSeconds > 0
@@ -482,9 +500,11 @@ export default function TypingTestClient({
         )
       : 100;
 
-  const timeLabel = `${String(Math.floor(timeLeft / 60)).padStart(2, "0")}:${String(
-    timeLeft % 60,
-  ).padStart(2, "0")}`;
+  const timeLabel = isUnlimited
+    ? "Unlimited"
+    : `${String(Math.floor(timeLeft / 60)).padStart(2, "0")}:${String(
+        timeLeft % 60,
+      ).padStart(2, "0")}`;
 
   const currentCharIndex = Math.min(
     typedChars.length,
@@ -596,8 +616,18 @@ export default function TypingTestClient({
       setIsRunning(false);
       setIsFinished(false);
       setTimeLeft(minutes * 60);
+      setCustomElapsedSeconds(0);
 
       try {
+        if (isCustomSource) {
+          const wordsData = buildCustomWords(customSourceText, lang);
+          if (!wordsData.length) {
+            throw new Error("Custom typing text is empty.");
+          }
+          setTargetWords(wordsData);
+          return;
+        }
+
         const wordsData = await fetchWordChunk(lang, minutes, 220);
         // Ensure wordsData is an array. fetchWordChunk returns the array of words.
         setTargetWords(Array.isArray(wordsData) ? wordsData : []);
@@ -608,11 +638,12 @@ export default function TypingTestClient({
         setIsLoadingSource(false);
       }
     },
-    [durationMin, fetchWordChunk, language],
+    [customSourceText, durationMin, fetchWordChunk, isCustomSource, language],
   );
 
   const appendMoreWords = useCallback(
     async (lang, minutes) => {
+      if (isCustomSource) return;
       if (isFetchingMoreRef.current) return;
       isFetchingMoreRef.current = true;
 
@@ -625,7 +656,7 @@ export default function TypingTestClient({
         isFetchingMoreRef.current = false;
       }
     },
-    [fetchWordChunk],
+    [fetchWordChunk, isCustomSource],
   );
 
   useEffect(() => {
@@ -662,6 +693,25 @@ export default function TypingTestClient({
   useEffect(() => {
     if (!isRunning || isFinished) return undefined;
 
+    if (isCustomSource) {
+      const timer = setInterval(() => {
+        setCustomElapsedSeconds((prev) => prev + 1);
+        if (!isUnlimited) {
+          setTimeLeft((prev) => {
+            if (prev <= 1) {
+              clearInterval(timer);
+              setIsRunning(false);
+              setIsFinished(true);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }
+      }, 1000);
+
+      return () => clearInterval(timer);
+    }
+
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -675,7 +725,24 @@ export default function TypingTestClient({
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [isFinished, isRunning]);
+  }, [isCustomSource, isFinished, isRunning, isUnlimited]);
+
+  useEffect(() => {
+    if (!isUnlimited || isFinished) return;
+    if (!targetWords.length) return;
+    if (finalTypedWords.length < targetWords.length) return;
+    if (!typedText.trim()) return;
+
+    const lastTargetWord = targetWords[targetWords.length - 1] || "";
+    const lastTypedWord = finalTypedWords[finalTypedWords.length - 1] || "";
+    const hasTypedLastWord =
+      lastTypedWord.length >= lastTargetWord.length || /\s$/u.test(typedText);
+
+    if (!hasTypedLastWord) return;
+
+    setIsFinished(true);
+    setIsRunning(false);
+  }, [finalTypedWords, isFinished, isUnlimited, targetWords, typedText]);
 
   function handleTypingChange(event) {
     if (isFinished || isLoadingSource || loadError) return;
@@ -782,7 +849,7 @@ export default function TypingTestClient({
             language,
             duration: durationMin,
             mode: displayMode,
-            testType: "Standard",
+            testType: isCustomSource ? "Custom" : "Standard",
             correctStrokes: finalWordEvaluation.correctStrokes,
             correctWords: finalWordEvaluation.correctWords,
             totalWords:
@@ -811,8 +878,20 @@ export default function TypingTestClient({
     durationMin,
     displayMode,
     finalWordEvaluation,
+    isCustomSource,
     wordTimings,
   ]);
+
+  const headerBadge = isCustomSource
+    ? "Custom Typing Session"
+    : "Bilingual Typing Lab";
+  const headerTitle = isCustomSource
+    ? "Custom Text Typing Test"
+    : "Bangla & English Typing Test";
+  const headerSubtitle = isCustomSource
+    ? "Your own text with the same analytics and reports."
+    : "Server-driven data with Unicode-safe strict word validation.";
+  const refreshLabel = isCustomSource ? "Reload Text" : "New Stream";
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_10%_10%,#0f766e_0%,#052e2b_35%,#041b19_100%)] px-4 py-10 text-slate-100 sm:px-6 lg:px-10">
@@ -823,13 +902,13 @@ export default function TypingTestClient({
         <header className="mb-6 flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between">
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-emerald-100/75">
-              Bilingual Typing Lab
+              {headerBadge}
             </p>
             <h1 className="mt-2 text-3xl font-extrabold leading-tight text-white sm:text-4xl">
-              Bangla & English Typing Test
+              {headerTitle}
             </h1>
             <p className="mt-2 text-sm text-emerald-50/80 sm:text-base">
-              Server-driven data with Unicode-safe strict word validation.
+              {headerSubtitle}
             </p>
           </div>
 
@@ -856,11 +935,19 @@ export default function TypingTestClient({
                 onChange={(event) => setDurationMin(Number(event.target.value))}
                 className="rounded-xl border border-emerald-100/30 bg-slate-950/45 px-4 py-3 text-sm font-semibold text-white outline-none ring-0 transition focus:border-amber-300"
               >
-                {DURATION_OPTIONS.map((option) => (
-                  <option key={option} value={option}>
-                    {option} min
-                  </option>
-                ))}
+                {durationOptions.map((option) => {
+                  const isUnlimitedOption = option === 0;
+                  const label = isUnlimitedOption
+                    ? "Unlimited"
+                    : `${option} min`;
+                  const key = isUnlimitedOption ? "unlimited" : String(option);
+
+                  return (
+                    <option key={key} value={option}>
+                      {label}
+                    </option>
+                  );
+                })}
               </select>
             </label>
 
@@ -882,7 +969,10 @@ export default function TypingTestClient({
         </header>
 
         <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-5">
-          <StatCard label="Time Left" value={timeLabel} />
+          <StatCard
+            label={isCustomSource ? "Duration" : "Time Left"}
+            value={timeLabel}
+          />
           <StatCard label="WPM" value={String(wpm)} />
           <StatCard label="Accuracy" value={`${accuracy}%`} />
           <StatCard
@@ -1010,7 +1100,7 @@ export default function TypingTestClient({
               onClick={() => replaceSource(language, durationMin)}
               className="rounded-xl bg-gradient-to-r from-amber-300 to-orange-300 px-5 py-2.5 text-sm font-extrabold text-slate-900 transition hover:brightness-105"
             >
-              New Stream
+              {refreshLabel}
             </button>
 
             <button
@@ -1022,6 +1112,7 @@ export default function TypingTestClient({
                 setChartZoom(1);
                 lastWordCountRef.current = 0;
                 lastTypingTimeRef.current = null;
+                setCustomElapsedSeconds(0);
 
                 setIsRunning(false);
                 setIsFinished(false);
