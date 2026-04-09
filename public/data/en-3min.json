@@ -1,206 +1,206 @@
 {
-    "language":  "en",
-    "durationMinutes":  3,
-    "documents":  [
-                      {
-                          "id":  "en-3-001",
-                          "title":  "Morning Focus",
-                          "text":  "Typing every day builds confidence and rhythm. Keep your shoulders relaxed, place your fingers on the home row, and move with steady accuracy before speed. A calm pace helps your brain predict patterns and reduce mistakes. Early morning practice ensures a fresh mind and sharp focus."
-                      },
-                      {
-                          "id":  "en-3-002",
-                          "title":  "Small Progress",
-                          "text":  "Practice is more powerful than talent when it is consistent. Try to type clean words first, then increase pace little by little. If you make an error, notice it, correct it, and continue without losing focus. Small daily improvements eventually lead to massive long-term results."
-                      },
-                      {
-                          "id":  "en-3-003",
-                          "title":  "Clear Mind",
-                          "text":  "A good typing session feels like breathing in a rhythm. Read two or three words ahead, keep your wrists light, and trust your muscle memory. Fast typing starts with precise control and smooth transitions. Eliminate distractions from your environment to maintain a perfectly clear mind."
-                      },
-                      {
-                          "id":  "en-3-004",
-                          "title":  "Component Logic",
-                          "text":  "Building modern web applications requires a solid understanding of component-based architecture. When you write code using React or Next.js, you break the user interface into small, reusable pieces. This approach makes debugging easier and keeps your codebase clean, organized, and highly efficient for future updates."
-                      },
-                      {
-                          "id":  "en-3-005",
-                          "title":  "Dramatic Irony",
-                          "text":  "Classic literature often relies on dramatic irony to build tension. In Shakespearean tragedies, the audience frequently knows something crucial that the main characters do not. This creates a sense of suspense and emotional engagement, drawing readers deeper into the complex psychological struggles of the protagonist."
-                      },
-                      {
-                          "id":  "en-3-006",
-                          "title":  "Empire Strategy",
-                          "text":  "Building a strong empire requires more than just military power; it demands careful resource management and strategic alliances. Upgrading your city, training troops, and researching new technologies at the academy are vital steps. Working together with alliance members ensures survival in a highly competitive environment."
-                      },
-                      {
-                          "id":  "en-3-007",
-                          "title":  "Modern Poetry",
-                          "text":  "Modern poetry often breaks away from traditional rhyme schemes to explore complex human emotions and societal shifts. Writers like W.B. Yeats used powerful symbols and vivid imagery to reflect the turbulent times they lived in. Reading such poetry expands our vocabulary and challenges our perspectives."
-                      },
-                      {
-                          "id":  "en-3-008",
-                          "title":  "Server Rendering",
-                          "text":  "Server-side rendering is a powerful feature in modern frontend frameworks. It allows pages to load faster and improves search engine optimization. By fetching data on the server before sending it to the browser, developers can provide a seamless and highly responsive experience for the users."
-                      },
-                      {
-                          "id":  "en-3-009",
-                          "title":  "Medieval Tales",
-                          "text":  "Studying historical literature gives us a window into the past. Chaucer\u0027s vivid descriptions of different social classes provide a fascinating glimpse into medieval life. The stories they tell are filled with humor, moral lessons, and timeless observations about human nature that still resonate with us today."
-                      },
-                      {
-                          "id":  "en-3-010",
-                          "title":  "Career Preparation",
-                          "text":  "Preparing for competitive exams or technical interviews demands strict discipline and a structured routine. Reviewing core concepts, solving previous problems, and taking mock tests regularly will build your confidence. Success is rarely an accident; it is the result of persistent effort and strategic daily planning."
-                      },
-                      {
-                          "id":  "en-3-011",
-                          "title":  "Keyboard Flow",
-                          "text":  "To achieve a high word-per-minute rate, you must minimize hand movement. Let your fingers hover gracefully over the keys and strike them with deliberate precision. Do not look down at the keyboard. Trust your spatial awareness, and soon your fingers will dance across the board."
-                      },
-                      {
-                          "id":  "en-3-012",
-                          "title":  "Rainy Afternoon",
-                          "text":  "There is something incredibly soothing about a rainy afternoon. The gentle sound of water hitting the windowpane creates a perfect atmosphere for deep work or reading a good book. It washes away the dust of the city, leaving the air feeling fresh, cool, and renewed."
-                      },
-                      {
-                          "id":  "en-3-013",
-                          "title":  "Utility Classes",
-                          "text":  "Designing user interfaces has become much faster with utility-first CSS frameworks like Tailwind. Instead of writing custom stylesheets, developers can apply predefined classes directly in their markup. This keeps the design consistent, makes the application responsive by default, and significantly speeds up the development process."
-                      },
-                      {
-                          "id":  "en-3-014",
-                          "title":  "Commanding Forces",
-                          "text":  "Leading an army to victory requires a brilliant commander and a well-balanced troop composition. Knowing when to attack, when to defend, and when to retreat is the hallmark of a great strategist. Flanking maneuvers and surprise attacks can often turn the tide of a difficult battle."
-                      },
-                      {
-                          "id":  "en-3-015",
-                          "title":  "Symbolic Meaning",
-                          "text":  "Words are powerful tools that carry deep symbolic meanings. A single metaphor can convey a complex emotion better than a long explanation. Writers spend years mastering this craft, carefully selecting each word to create a specific rhythm, tone, and visual image in the reader\u0027s mind."
-                      },
-                      {
-                          "id":  "en-3-016",
-                          "title":  "Digital Security",
-                          "text":  "In today\u0027s interconnected world, protecting personal data is more important than ever. Implementing secure authentication methods, like JSON Web Tokens, helps prevent unauthorized access. Developers must always prioritize security protocols to ensure that user information remains completely safe from potential cyber threats and malicious attacks."
-                      },
-                      {
-                          "id":  "en-3-017",
-                          "title":  "Healthy Habits",
-                          "text":  "Maintaining physical health is directly linked to mental sharpness. Taking short breaks to stretch your back and rest your eyes during long coding or typing sessions is crucial. Drinking plenty of water and maintaining a proper posture will prevent fatigue and keep your productivity levels high."
-                      },
-                      {
-                          "id":  "en-3-018",
-                          "title":  "State Management",
-                          "text":  "Handling dynamic data efficiently is the key to building interactive web applications. As a project grows, managing the application state becomes increasingly complex. Using proper hooks and context providers allows developers to pass data smoothly across different components without creating a tangled mess of code."
-                      },
-                      {
-                          "id":  "en-3-019",
-                          "title":  "Time Management",
-                          "text":  "Time is an irreplaceable resource. Successful people do not simply work hard; they work smart by prioritizing their most important tasks. Avoiding procrastination and breaking large projects into smaller, manageable steps will help you achieve your goals without feeling overwhelmed by tight deadlines or pressure."
-                      },
-                      {
-                          "id":  "en-3-020",
-                          "title":  "Overcoming Failure",
-                          "text":  "Failure is not the opposite of success; it is a vital part of the learning process. Every mistake you make provides valuable feedback that helps you improve. Embrace your errors, analyze what went wrong, and use that knowledge to build a stronger and more resilient foundation."
-                      },
-                      {
-                          "id":  "en-3-021",
-                          "title":  "Component Logic",
-                          "text":  "Building interactive user interfaces requires a deep understanding of component lifecycles. When you use modern JavaScript libraries, state management becomes the core of your application. Writing clean, modular code allows you to easily scale your projects and maintain them without unnecessary headaches or complex bugs."
-                      },
-                      {
-                          "id":  "en-3-022",
-                          "title":  "Classic Themes",
-                          "text":  "The beauty of classic literature lies in its timeless themes. Exploring the depths of human ambition and betrayal in Elizabethan dramas reveals how little human nature has changed. These masterpieces continue to captivate audiences because they speak directly to our shared emotional experiences and universal flaws."
-                      },
-                      {
-                          "id":  "en-3-023",
-                          "title":  "Gathering Resources",
-                          "text":  "A successful kingdom relies heavily on gathering resources efficiently. Sending your gatherers to high-level nodes while keeping your city defended is a delicate balancing act. Always keep an eye on the map to avoid surprise attacks from rival alliances eager to steal your hard-earned materials."
-                      },
-                      {
-                          "id":  "en-3-024",
-                          "title":  "Exam Dedication",
-                          "text":  "Preparing for a highly competitive job requires immense dedication. You must thoroughly understand the syllabus, identify your weak points, and practice previous question papers regularly. Staying calm during the actual exam is just as crucial as the months of rigorous study you put in beforehand."
-                      },
-                      {
-                          "id":  "en-3-025",
-                          "title":  "Primary Focus",
-                          "text":  "Accuracy should always be your primary focus when practicing your typing skills. Speed will naturally follow once your fingers know exactly where to go without hesitation. Do not let a single mistake ruin your rhythm; quickly correct the error, take a breath, and seamlessly move forward."
-                      },
-                      {
-                          "id":  "en-3-026",
-                          "title":  "Natural Symphony",
-                          "text":  "Taking a quiet walk through a dense forest can instantly relieve mental stress. The rustling of leaves and the distant chirping of birds create a natural symphony. Disconnecting from digital screens allows your mind to reset, fostering creativity and a renewed sense of inner peace."
-                      },
-                      {
-                          "id":  "en-3-027",
-                          "title":  "Medieval Narratives",
-                          "text":  "Medieval narratives often use a journey or a pilgrimage as a framing device. This allows the author to bring together characters from various social backgrounds. The resulting interactions provide a rich, satirical, and often humorous commentary on the societal norms and hypocrisies of that specific era."
-                      },
-                      {
-                          "id":  "en-3-028",
-                          "title":  "Secure Portals",
-                          "text":  "Implementing secure user authentication is a critical step in building a web portal. Using web tokens ensures that sensitive data remains protected from unauthorized access. Developers must carefully handle token expiration and secure storage to maintain the highest level of integrity and trust within the application."
-                      },
-                      {
-                          "id":  "en-3-029",
-                          "title":  "Consistent Routine",
-                          "text":  "Consistency is the secret ingredient to mastering any new skill. Practicing for just fifteen minutes every single day yields far better results than cramming for hours once a week. Build a sustainable routine, trust the process, and you will eventually see remarkable improvements in your abilities."
-                      },
-                      {
-                          "id":  "en-3-030",
-                          "title":  "Strategic Alliances",
-                          "text":  "Diplomacy is just as important as military strength when expanding your territory. Forming strategic alliances with neighboring leaders can provide essential protection during times of war. A well-coordinated joint attack is almost always more devastating than a solitary assault against a heavily fortified enemy position."
-                      },
-                      {
-                          "id":  "en-3-031",
-                          "title":  "Poetic Symbolism",
-                          "text":  "Symbolism in modern poetry often reflects the chaos and uncertainty of a rapidly changing world. Poets use fragmented imagery and shifting perspectives to express a deep sense of loss or spiritual yearning. Analyzing these complex verses requires a careful eye and a highly receptive imagination."
-                      },
-                      {
-                          "id":  "en-3-032",
-                          "title":  "Performance Optimization",
-                          "text":  "Optimizing the performance of a web application greatly enhances the user experience. Leveraging server components and static generation can drastically reduce loading times. A fast, responsive interface keeps users engaged and significantly lowers the bounce rate, which is essential for any modern digital platform\u0027s ultimate success."
-                      },
-                      {
-                          "id":  "en-3-033",
-                          "title":  "Smarter Work",
-                          "text":  "Effective time management is about working smarter, not harder. Start your day by tackling the most difficult task first while your energy levels are high. Breaking complex projects down into smaller, actionable steps makes them feel less overwhelming and helps maintain a steady momentum throughout the week."
-                      },
-                      {
-                          "id":  "en-3-034",
-                          "title":  "System Stability",
-                          "text":  "Experiencing random system freezes on your computer can be incredibly frustrating. Sometimes, background processes consume too much memory, or a recent update conflicts with existing hardware drivers. Switching to a lighter operating system can often restore stability and breathe new life into an otherwise struggling machine."
-                      },
-                      {
-                          "id":  "en-3-035",
-                          "title":  "Grammatical Precision",
-                          "text":  "Mastering the grammatical structure of a language gives you the power to articulate complex thoughts with absolute precision. Understanding how different clauses interact within a sentence elevates your writing from basic communication to a sophisticated art form. Continuous reading and deliberate practice are key to linguistic fluency."
-                      },
-                      {
-                          "id":  "en-3-036",
-                          "title":  "Tragic Heroes",
-                          "text":  "Tragic heroes in classic plays usually possess a fatal flaw that inevitably leads to their downfall. Whether it is blind ambition, overwhelming jealousy, or excessive pride, this fundamental weakness drives the narrative toward a devastating conclusion. Audiences are left with a profound sense of pity and fear."
-                      },
-                      {
-                          "id":  "en-3-037",
-                          "title":  "Responsive Styling",
-                          "text":  "Responsive design ensures that your application looks beautiful on any device, from large desktop monitors to small mobile screens. Using utility classes allows developers to apply precise styling directly within the markup, creating a highly customized and consistent visual hierarchy without writing thousands of lines of code."
-                      },
-                      {
-                          "id":  "en-3-038",
-                          "title":  "Patient Preparation",
-                          "text":  "Patience is a virtue when waiting for the results of a major examination. The anxiety can be overwhelming, but it is important to remember that a single test does not define your entire future. Stay positive, keep learning, and always be prepared to embrace new opportunities gracefully."
-                      },
-                      {
-                          "id":  "en-3-039",
-                          "title":  "Tech Progression",
-                          "text":  "Upgrading your military technology is a crucial step for dominating the battlefield. Researching advanced combat tactics gives your troops a significant advantage over less prepared enemies. A wise commander always prioritizes technological progression alongside raw troop numbers to ensure long-term supremacy in any prolonged conflict."
-                      },
-                      {
-                          "id":  "en-3-040",
-                          "title":  "Work-Life Balance",
-                          "text":  "Maintaining a healthy work-life balance is essential for preventing burnout. Dedicate specific hours to your professional duties and strictly disconnect once that time is up. Engaging in hobbies, spending time with family, or simply resting are vital for recharging your mental and physical batteries for the next day."
-                      }
-                  ]
+  "language": "en",
+  "durationMinutes": 3,
+  "documents": [
+    {
+      "id": "en-3-001",
+      "title": "Office Order",
+      "text": "All government officials are requested to submit their weekly progress reports by Friday afternoon. The report must be typed clearly in English and submitted to the section officer. Any delay in submission will be noted in the annual confidential report. This order is effective immediately from the date of issuance by the Ministry of Public Administration."
+    },
+    {
+      "id": "en-3-002",
+      "title": "Notice for Typing Test",
+      "text": "The Bangladesh Public Service Commission will hold a typing test for the post of computer operator next month. Candidates must have a typing speed of at least thirty words per minute in English. The test will be conducted on a standard computer keyboard. No extra time will be given for any technical difficulty. Admit cards must be shown at the entry."
+    },
+    {
+      "id": "en-3-003",
+      "title": "Office Memorandum",
+      "text": "It is hereby informed that all files must be typed and maintained in both Bengali and English versions. The senior assistant will check the accuracy of each typed document before final approval. Typing errors in official letters cause unnecessary delays in administrative work. All staff are advised to practice typing regularly to improve their office efficiency."
+    },
+    {
+      "id": "en-3-004",
+      "title": "Circular from Ministry",
+      "text": "The Ministry of Establishment has issued a new circular regarding the promotion of computer operators. Only those who have passed the departmental typing examination will be considered for promotion. The typing test includes both English and Bengali sections. Candidates must secure at least eighty percent accuracy to qualify for the next grade."
+    },
+    {
+      "id": "en-3-005",
+      "title": "Duty Order",
+      "text": "Mr. Kamal Hossain is hereby posted as the assistant computer operator in the accounts section. He will be responsible for typing all vouchers, bills, and monthly statements. His reporting officer will evaluate his typing speed and accuracy every month. This duty order is issued with the approval of the deputy secretary of the finance division."
+    },
+    {
+      "id": "en-3-006",
+      "title": "Official Letter",
+      "text": "Dear Sir, I am writing this letter to request a transfer from the main secretariat to the district office. I have been working as a typist for five years with excellent performance records. My typing speed is forty words per minute with ninety five percent accuracy. I hope you will kindly consider my application for the transfer."
+    },
+    {
+      "id": "en-3-007",
+      "title": "Typing Exam Rules",
+      "text": "Every candidate must follow the rules of the typing examination strictly. No mobile phone or electronic device is allowed inside the examination hall. The computer keyboard will be provided by the exam authority. You cannot bring your own keyboard or mouse. The test duration is exactly three minutes. Any violation will lead to immediate disqualification."
+    },
+    {
+      "id": "en-3-008",
+      "title": "Annual Report",
+      "text": "The annual report of the ministry must be typed and submitted before the end of the financial year. All sections must provide their typed data to the planning cell. The report contains important statistics about government projects. Typing mistakes in numbers or dates can create serious problems in budget planning. Therefore double checking is mandatory."
+    },
+    {
+      "id": "en-3-009",
+      "title": "Office Routine",
+      "text": "The office routine for computer operators starts at nine in the morning. First you must type the daily attendance sheet. Then you will type letters and memos as directed by the section officer. After lunch break you will update the file register. The last hour is for typing practice to improve speed. This routine must be followed every working day."
+    },
+    {
+      "id": "en-3-010",
+      "title": "Application for Leave",
+      "text": "To the secretary of the ministry, I beg to state that I need three days of casual leave starting from Monday. My mother is sick and needs medical care. I have completed all urgent typing work before applying. Senior assistant Mr. Rahman will handle my duties during my absence. I hope you will grant me this leave kindly."
+    },
+    {
+      "id": "en-3-011",
+      "title": "Meeting Minutes",
+      "text": "The monthly meeting of the computer operators was held on the fifteenth of this month. The chairman discussed the importance of error free typing in government correspondence. It was decided that every operator must practice typing for one hour daily. A surprise typing test will be conducted next week. All members agreed to follow the new guidelines strictly."
+    },
+    {
+      "id": "en-3-012",
+      "title": "Secretariat Instructions",
+      "text": "Bangladesh Secretariat has issued fresh instructions for all computer operators. Each operator must type at least twenty official letters per day. The letters must follow the standard government format. No abbreviation or short form is allowed in official typing. The quality of typing will be checked by the assistant secretary every Friday. Maintain high standards always."
+    },
+    {
+      "id": "en-3-013",
+      "title": "Notification",
+      "text": "This notification is for all candidates who have applied for the post of data entry operator. The typing examination will be held at the central computer lab on the tenth of next month. You must report at eight in the morning with your original ID card. The test result will be published on the ministry website within seven days."
+    },
+    {
+      "id": "en-3-014",
+      "title": "Office Circular",
+      "text": "It is brought to the notice of all employees that typing errors in official documents are not acceptable. Each document must be checked twice before final printing. The quality control section will return any document with more than two typing mistakes. Repeat offenders will face disciplinary action. This circular is issued with the approval of the joint secretary."
+    },
+    {
+      "id": "en-3-015",
+      "title": "Promotion Rules",
+      "text": "The promotion of typists and computer operators depends on their performance in the departmental examination. The exam includes a practical typing test and a short written test. Candidates need at least thirty five words per minute speed with ninety percent accuracy. Those who fail twice will not be eligible for promotion for the next three years. Prepare well."
+    },
+    {
+      "id": "en-3-016",
+      "title": "Confidential Report",
+      "text": "The annual confidential report of each computer operator is prepared by the section officer. The report includes remarks on typing speed, accuracy, punctuality, and behavior. Any complaint from other sections about typing errors is recorded. To get a good report, you must type all documents correctly on the first attempt. Careless work affects your career badly."
+    },
+    {
+      "id": "en-3-017",
+      "title": "Training Program",
+      "text": "The ministry has arranged a fifteen day typing training program for new computer operators. The training will cover English and Bengali typing on modern keyboards. Professional trainers from the National Computer Training Center will conduct the classes. Attendance is compulsory for all newly appointed staff. After the training, a final examination will be held to assess your improvement."
+    },
+    {
+      "id": "en-3-018",
+      "title": "Public Service",
+      "text": "Government computer operators serve the public by typing various certificates and applications every day. You must type birth certificates, national ID cards, land records, and pension papers carefully. A single typing mistake can cause serious trouble for a citizen. Therefore you must treat every document with respect and attention. Your service is valuable for the nation."
+    },
+    {
+      "id": "en-3-019",
+      "title": "Speed Test Guidelines",
+      "text": "In the typing speed test for government jobs, you will be given a passage to type. The passage will be about office administration or public service. You must type exactly what is shown on the screen. No change in spelling or punctuation is allowed. The timer starts automatically when you press the first key. Stop typing when the timer ends."
+    },
+    {
+      "id": "en-3-020",
+      "title": "Leave Application Format",
+      "text": "Every leave application in the ministry must be typed in a standard format. The subject line should clearly state the type of leave. The body should mention the number of days and the reason. You must type your name, designation, and employee ID at the bottom. The application should be addressed to the deputy secretary. Use proper spacing and punctuation."
+    },
+    {
+      "id": "en-3-021",
+      "title": "Weekly Report",
+      "text": "All computer operators must submit their weekly typing report to the administrative officer. The report should include total number of letters typed, number of errors made, and average speed achieved. This data helps the ministry assess the efficiency of each section. Operators with consistently good performance will be rewarded. Submit the report every Saturday before leaving office."
+    },
+    {
+      "id": "en-3-022",
+      "title": "Code of Conduct",
+      "text": "The code of conduct for government typists includes several important rules. You must not share any confidential typed document with outsiders. Typing personal work during office hours is strictly forbidden. You must keep your workstation clean and organized. Any violation of this code will lead to a formal inquiry and possible punishment. Follow the rules strictly."
+    },
+    {
+      "id": "en-3-023",
+      "title": "Computer Maintenance",
+      "text": "Government computer operators are responsible for basic maintenance of their machines. You must keep the keyboard clean and free from dust. The computer should be shut down properly every evening. Any hardware problem should be reported immediately to the IT section. Do not try to repair anything yourself. A well maintained computer helps you type faster without interruptions."
+    },
+    {
+      "id": "en-3-024",
+      "title": "Exam Hall Rules",
+      "text": "On the day of the typing examination, you must enter the hall quietly. Find your assigned computer and sit down. Do not touch the keyboard until the examiner gives the signal. Listen to all instructions carefully before starting. After the test ends, raise your hand and wait. Leave the hall only when permitted. Breaking any rule will disqualify you."
+    },
+    {
+      "id": "en-3-025",
+      "title": "Appointment Letter",
+      "text": "This appointment letter is issued to Mr. Rahim Uddin for the post of computer operator. He has successfully passed the written examination and the typing test. His typing speed was recorded at thirty eight words per minute with ninety two percent accuracy. He is directed to report to the section officer on the first of next month. Congratulations and best wishes."
+    },
+    {
+      "id": "en-3-026",
+      "title": "File Management",
+      "text": "Typing and maintaining official files is a key duty of computer operators. Each file must have a typed cover page with the subject and reference number. All typed documents inside must be arranged in date order. The file register should be updated daily with new entries. Proper file management saves time and helps officers find documents quickly. Be organized."
+    },
+    {
+      "id": "en-3-027",
+      "title": "Budget Typing",
+      "text": "Typing budget related documents requires extra care because numbers are involved. A single digit typed incorrectly can change the entire budget amount. Always double check typed figures against the original document. Use the numeric keypad for faster number entry. Budget documents must be error free before submission to the finance ministry. Accuracy is more important than speed here."
+    },
+    {
+      "id": "en-3-028",
+      "title": "Official Seal",
+      "text": "After typing any official letter, the computer operator must print two copies. One copy is sent to the recipient and the other is kept in the file. The section officer then checks the typed content and applies the official seal. Only after sealing does the letter become valid. Typing errors discovered after sealing cause great embarrassment and waste of time."
+    },
+    {
+      "id": "en-3-029",
+      "title": "Daily Register",
+      "text": "Every government office maintains a daily typing register. The register records which documents were typed, by whom, and at what time. At the end of each day, the senior typist checks the register and signs it. This register is used to measure the workload of each computer operator. Always type your entries in the register clearly and accurately."
+    },
+    {
+      "id": "en-3-030",
+      "title": "Transfer Order",
+      "text": "The following computer operators are hereby transferred to different sections as per administrative requirement. Mr. Hasan from accounts to establishment section. Ms. Fatema from establishment to finance section. All concerned are directed to complete the transfer formalities within seven days. Relieving letters must be typed and signed by the respective section officers. Handover charge properly before leaving."
+    },
+    {
+      "id": "en-3-031",
+      "title": "Shortage of Staff",
+      "text": "The ministry is facing a shortage of skilled computer operators. Many positions remain vacant due to lack of qualified candidates. The typing test results show that most applicants cannot achieve the required speed and accuracy. The ministry has decided to conduct special training programs for potential candidates. Young job seekers are encouraged to practice typing daily to meet government standards."
+    },
+    {
+      "id": "en-3-032",
+      "title": "Official Gazette",
+      "text": "The Bangladesh Gazette is the official government publication. All laws, rules, orders, and notifications are typed and published in the Gazette. Computer operators working in the gazette section must have excellent typing skills. Even a small error in the Gazette can create legal confusion. Therefore only experienced typists with proven accuracy are posted to this section."
+    },
+    {
+      "id": "en-3-033",
+      "title": "Inquiry Report",
+      "text": "The inquiry committee has submitted its typed report regarding the missing file from the records section. The report states that the file was not properly typed or indexed. The computer operator responsible has been identified. He will be asked to explain why disciplinary action should not be taken. This incident shows the importance of careful typing and proper file management."
+    },
+    {
+      "id": "en-3-034",
+      "title": "Office Timing",
+      "text": "The office timing for all computer operators is from nine in the morning to five in the evening. Typing work must be completed within this period. Overtime typing is allowed only with prior permission from the section officer. The attendance register must be typed and signed at the start and end of each day. Late arrival is recorded and affects your annual evaluation."
+    },
+    {
+      "id": "en-3-035",
+      "title": "Supply Order",
+      "text": "A supply order has been typed for fifty new computer keyboards for the typing pool. The order specifies that the keyboards must have standard QWERTY layout with soft keys. Each keyboard will be tested by the computer operators before acceptance. The supplier must deliver within fifteen days. This order is issued by the director of administration and must be followed fully."
+    },
+    {
+      "id": "en-3-036",
+      "title": "Warning Letter",
+      "text": "This warning letter is issued to the computer operator for repeated typing errors in official letters. Despite previous verbal warnings, the quality of work has not improved. The operator is hereby instructed to complete a refresher typing course within one month. Failure to improve will result in a pay cut. A copy of this letter will be placed in the personal file."
+    },
+    {
+      "id": "en-3-037",
+      "title": "Advertisement",
+      "text": "The Ministry of Public Administration invites applications for the post of computer operator. Applicants must have a typing speed of thirty five words per minute in English. A practical typing test will be held at the ministry computer lab. Selected candidates will be posted in different divisions. Application deadline is the thirtieth of next month. No fee is required for this post."
+    },
+    {
+      "id": "en-3-038",
+      "title": "Stock Register",
+      "text": "The computer operator in charge of the store must type and maintain the stock register. All items such as keyboards, mice, printers, and paper must be entered. When any item is issued, the entry must be updated immediately. The stock register is checked every month by the audit team. Typing mistakes in the register cause problems during audit. Be careful."
+    },
+    {
+      "id": "en-3-039",
+      "title": "Acknowledgement",
+      "text": "The computer operator must type an acknowledgement slip for every document received. The slip should include the date, document number, and the name of the sender. A copy is given to the sender and another is kept in the file. This system helps track documents and prevents loss. Always type the acknowledgement clearly so that there is no confusion later."
+    },
+    {
+      "id": "en-3-040",
+      "title": "Final Advice",
+      "text": "To all candidates preparing for the government typing examination, practice daily on a desktop keyboard. Learn the correct finger positions and never look at the keyboard while typing. Focus on accuracy first; speed will come automatically with time. Read each passage carefully before starting to type. Stay calm during the exam and avoid rushing. Best of luck for your future career."
+    }
+  ]
 }

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 
 const DEFAULT_LIMIT = 5;
+const LOW_WPM_THRESHOLD = 20;
 
 export default function DeviceSearchPage() {
   const [deviceQuery, setDeviceQuery] = useState("");
@@ -12,11 +13,67 @@ export default function DeviceSearchPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [lowWpmCopied, setLowWpmCopied] = useState(false);
 
   const jsonText = useMemo(() => {
     if (!result) return "";
     return JSON.stringify(result, null, 2);
   }, [result]);
+
+  const lowWpmWords = useMemo(() => {
+    if (!Array.isArray(result?.data)) return [];
+
+    const extracted = [];
+
+    for (const report of result.data) {
+      const wordTimings = Array.isArray(report?.wordTimings)
+        ? report.wordTimings
+        : [];
+
+      for (const timing of wordTimings) {
+        if (
+          typeof timing?.wpm !== "number" ||
+          timing.wpm >= LOW_WPM_THRESHOLD
+        ) {
+          continue;
+        }
+
+        extracted.push({
+          word: timing.word,
+          wordWpm: timing.wpm,
+          reportDate: report?.date,
+          reportDeviceName: report?.deviceName,
+          reportLanguage: report?.language,
+        });
+      }
+    }
+
+    extracted.sort((a, b) => {
+      if (a.wordWpm !== b.wordWpm) {
+        return a.wordWpm - b.wordWpm;
+      }
+
+      const aDate = a.reportDate ? new Date(a.reportDate).getTime() : 0;
+      const bDate = b.reportDate ? new Date(b.reportDate).getTime() : 0;
+      return bDate - aDate;
+    });
+
+    return extracted;
+  }, [result]);
+
+  const lowWpmCopyText = useMemo(() => {
+    if (!lowWpmWords.length) return "";
+
+    return lowWpmWords
+      .map((item) => {
+        const word = String(item.word || "").trim();
+        if (!word) return null;
+        const wpm = Number.isFinite(item.wordWpm) ? item.wordWpm : 0;
+        return `${word}(${wpm}wpm)`;
+      })
+      .filter(Boolean)
+      .join("\n");
+  }, [lowWpmWords]);
 
   const handleSearch = async (event) => {
     event.preventDefault();
@@ -70,6 +127,31 @@ export default function DeviceSearchPage() {
 
       setCopied(true);
       window.setTimeout(() => setCopied(false), 1600);
+    } catch (err) {
+      setError(err?.message || "Copy failed. Please try again.");
+    }
+  };
+
+  const handleCopyLowWpm = async () => {
+    if (!lowWpmCopyText) return;
+
+    try {
+      if (navigator?.clipboard?.writeText) {
+        await navigator.clipboard.writeText(lowWpmCopyText);
+      } else {
+        const textarea = document.createElement("textarea");
+        textarea.value = lowWpmCopyText;
+        textarea.style.position = "fixed";
+        textarea.style.opacity = "0";
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textarea);
+      }
+
+      setLowWpmCopied(true);
+      window.setTimeout(() => setLowWpmCopied(false), 1600);
     } catch (err) {
       setError(err?.message || "Copy failed. Please try again.");
     }
@@ -211,6 +293,54 @@ export default function DeviceSearchPage() {
                 </span>
               )}
             </button>
+
+            <div className="mt-6 rounded-2xl border border-white/10 bg-black/20 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-xs uppercase tracking-[0.2em] text-emerald-200/80">
+                  Low WPM Words (Under {LOW_WPM_THRESHOLD})
+                </p>
+                <button
+                  type="button"
+                  onClick={handleCopyLowWpm}
+                  disabled={!lowWpmCopyText}
+                  className="rounded-full border border-white/10 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-100 transition hover:border-emerald-400/60 hover:bg-emerald-500/10 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {lowWpmCopied ? "Copied" : "Copy Words"}
+                </button>
+              </div>
+              {lowWpmWords.length > 0 ? (
+                <div className="mt-3 space-y-2 max-h-[260px] overflow-auto pr-1">
+                  {lowWpmWords.map((item, index) => (
+                    <div
+                      key={`${item.word}-${index}`}
+                      className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/8 bg-slate-950/60 px-3 py-2 text-sm"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate text-slate-100">
+                          {index + 1}. {item.word}
+                        </p>
+                        <p className="text-xs text-slate-400">
+                          {item.reportDeviceName} ·{" "}
+                          {item.reportLanguage?.toUpperCase?.() ||
+                            item.reportLanguage}{" "}
+                          ·{" "}
+                          {item.reportDate
+                            ? new Date(item.reportDate).toLocaleString()
+                            : "unknown date"}
+                        </p>
+                      </div>
+                      <span className="shrink-0 rounded-full border border-amber-300/20 bg-amber-300/10 px-3 py-1 text-xs font-semibold text-amber-200">
+                        {item.wordWpm} WPM
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="mt-2 text-sm text-slate-400">
+                  No low-WPM words found yet.
+                </p>
+              )}
+            </div>
           </div>
         </section>
       </div>
