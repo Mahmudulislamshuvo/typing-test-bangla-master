@@ -1062,39 +1062,39 @@ export default function TypingTestClient({
         </div>
 
         <section
-          className={`rounded-2xl border border-white/15 bg-slate-950/40 p-5 sm:p-7 ${
+          className={`rounded-2xl border border-white/15 bg-white/90 p-5 sm:p-7 ${
             language === "bn" ? "[font-family:var(--font-bengali)]" : ""
           }`}
         >
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.15em] text-amber-200/90">
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.15em] text-slate-700">
             Target Text
           </h2>
 
           {isLoadingSource ? (
-            <p className="text-lg text-emerald-50/80">Loading source...</p>
+            <p className="text-lg text-slate-700">Loading source...</p>
           ) : loadError ? (
             <p className="rounded-xl border border-rose-300/50 bg-rose-900/20 p-3 text-sm text-rose-100">
               {loadError}
             </p>
           ) : displayMode === "ticker" ? (
-            <div className="relative overflow-hidden rounded-2xl border border-cyan-100/20 bg-slate-950/55 px-4 py-8">
-              <div className="pointer-events-none absolute inset-y-0 left-[38%] w-[2px] bg-amber-300/70" />
+            <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 px-4 py-8">
+              <div className="pointer-events-none absolute inset-y-0 left-[38%] w-[2px] bg-amber-400/80" />
               <div
                 ref={tickerContainerRef}
-                className="whitespace-nowrap text-2xl font-semibold leading-relaxed text-emerald-50 transition-transform duration-300 ease-out sm:text-3xl"
+                className="whitespace-nowrap text-2xl font-semibold leading-relaxed text-black transition-transform duration-300 ease-out sm:text-3xl"
                 style={{
                   transform: `translate3d(calc(38% - ${tickerOffsetLeft}px), 0, 0)`,
                 }}
               >
                 {tickerWindow.words.map((word, localIndex) => {
                   const globalIndex = tickerWindow.start + localIndex;
-                  let className = "text-emerald-50/60";
+                  let className = "text-black";
 
                   if (globalIndex < liveWordEvaluation.wordStatuses.length) {
                     className =
                       liveWordEvaluation.wordStatuses[globalIndex] === "correct"
-                        ? "text-emerald-300"
-                        : "text-rose-300";
+                        ? "text-emerald-700"
+                        : "text-rose-600";
                   }
 
                   if (!isFinished && globalIndex === activeWordIndex) {
@@ -1118,18 +1118,18 @@ export default function TypingTestClient({
           ) : (
             <p className="leading-8 sm:text-lg">
               {passageWindow.start > 0 && (
-                <span className="text-emerald-50/30">... </span>
+                <span className="text-black">... </span>
               )}
               {passageWindow.chars.map((char, index) => {
                 const absoluteIndex = passageWindow.start + index;
-                let className = "text-emerald-50/60";
+                let className = "text-black";
 
                 if (passageCharStates) {
                   const status = passageCharStates[absoluteIndex];
                   if (status === "correct") {
-                    className = "text-emerald-300";
+                    className = "text-emerald-700";
                   } else if (status === "incorrect") {
-                    className = "text-rose-300";
+                    className = "text-rose-600";
                   }
                 }
 
@@ -1162,7 +1162,7 @@ export default function TypingTestClient({
                 : "Start typing here..."
             }
             rows={8}
-            className={`w-full resize-none rounded-2xl border border-cyan-100/20 bg-slate-950/55 p-4 text-lg leading-8 text-slate-100 outline-none transition focus:border-amber-300 focus:ring-2 focus:ring-amber-300/30 sm:text-xl ${
+            className={`w-full resize-none rounded-2xl border border-cyan-100/20 bg-slate-950/55 p-4 text-xl leading-8 text-white outline-none transition focus:border-amber-300 focus:ring-2 focus:ring-amber-300/30 sm:text-2xl ${
               language === "bn" ? "[font-family:var(--font-bengali)]" : ""
             }`}
             onPaste={(event) => event.preventDefault()}
