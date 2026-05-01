@@ -174,12 +174,12 @@ function getTargetSlice(targetWords, typedWordCount, isFinal) {
   return targetWords.slice(0, length);
 }
 
-function getWordStartIndex(targetWords, wordIndex) {
+function getWordStartIndex(targetWords, wordIndex, locale) {
   let index = 0;
   const maxIndex = Math.max(0, Math.min(wordIndex, targetWords.length));
 
   for (let i = 0; i < maxIndex; i += 1) {
-    index += targetWords[i].length + 1;
+    index += splitGraphemes(targetWords[i], locale).length + 1;
   }
 
   return index;
@@ -559,7 +559,11 @@ export default function TypingTestClient({
 
     if (hasTrailingSpace) {
       const nextWordIndex = Math.min(liveTypedWords.length, targetWords.length);
-      const wordStartIndex = getWordStartIndex(targetWords, nextWordIndex);
+      const wordStartIndex = getWordStartIndex(
+        targetWords,
+        nextWordIndex,
+        locale,
+      );
       return Math.min(wordStartIndex, maxCharIndex);
     }
 
@@ -569,7 +573,11 @@ export default function TypingTestClient({
     );
     const currentWord = finalTypedWords[currentWordIndex] || "";
     const currentWordLength = splitGraphemes(currentWord, locale).length;
-    const wordStartIndex = getWordStartIndex(targetWords, currentWordIndex);
+    const wordStartIndex = getWordStartIndex(
+      targetWords,
+      currentWordIndex,
+      locale,
+    );
     return Math.min(wordStartIndex + currentWordLength, maxCharIndex);
   }, [
     displayMode,
