@@ -8,6 +8,8 @@ import {
   useRef,
   useState,
 } from "react";
+import { usePathname } from "next/navigation";
+import { log } from "firebase/firestore/pipelines";
 
 const DURATION_OPTIONS = [1, 2, 3, 5, 10, 15, 20];
 const DISPLAY_MODES = [
@@ -239,6 +241,9 @@ export default function TypingTestClient({
   sourceMode = "remote",
   customSourceText = "",
 }) {
+  const pathname = usePathname();
+  const showTargetText = !pathname?.startsWith("/custom-typing");
+
   const isCustomSource = sourceMode === "custom";
   const [language, setLanguage] = useState(initialLanguage);
   const [durationMin, setDurationMin] = useState(initialDuration);
@@ -1069,92 +1074,98 @@ export default function TypingTestClient({
           />
         </div>
 
-        <section
-          className={`rounded-2xl border border-white/15 bg-white/90 p-5 sm:p-7 ${
-            language === "bn" ? "[font-family:var(--font-bengali)]" : ""
-          }`}
-        >
-          <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.15em] text-slate-700">
-            Target Text
-          </h2>
+        {showTargetText ? (
+          <section
+            className={`rounded-2xl border border-white/15 bg-white/90 p-5 sm:p-7 ${
+              language === "bn" ? "[font-family:var(--font-bengali)]" : ""
+            }`}
+          >
+            <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.15em] text-slate-700">
+              Target Text
+            </h2>
 
-          {isLoadingSource ? (
-            <p className="text-lg text-slate-700">Loading source...</p>
-          ) : loadError ? (
-            <p className="rounded-xl border border-rose-300/50 bg-rose-900/20 p-3 text-sm text-rose-100">
-              {loadError}
-            </p>
-          ) : displayMode === "ticker" ? (
-            <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 px-4 py-8">
-              <div className="pointer-events-none absolute inset-y-0 left-[38%] w-[2px] bg-amber-400/80" />
-              <div
-                ref={tickerContainerRef}
-                className="whitespace-nowrap text-2xl font-semibold leading-relaxed text-black transition-transform duration-300 ease-out sm:text-3xl"
-                style={{
-                  transform: `translate3d(calc(38% - ${tickerOffsetLeft}px), 0, 0)`,
-                }}
-              >
-                {tickerWindow.words.map((word, localIndex) => {
-                  const globalIndex = tickerWindow.start + localIndex;
+            {isLoadingSource ? (
+              <p className="text-lg text-slate-700">Loading source...</p>
+            ) : loadError ? (
+              <p className="rounded-xl border border-rose-300/50 bg-rose-900/20 p-3 text-sm text-rose-100">
+                {loadError}
+              </p>
+            ) : displayMode === "ticker" ? (
+              <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 px-4 py-8">
+                <div className="pointer-events-none absolute inset-y-0 left-[38%] w-[2px] bg-amber-400/80" />
+                <div
+                  ref={tickerContainerRef}
+                  className="whitespace-nowrap text-2xl font-semibold leading-relaxed text-black transition-transform duration-300 ease-out sm:text-3xl"
+                  style={{
+                    transform: `translate3d(calc(38% - ${tickerOffsetLeft}px), 0, 0)`,
+                  }}
+                >
+                  {tickerWindow.words.map((word, localIndex) => {
+                    const globalIndex = tickerWindow.start + localIndex;
+                    let className = "text-black";
+
+                    if (globalIndex < liveWordEvaluation.wordStatuses.length) {
+                      className =
+                        liveWordEvaluation.wordStatuses[globalIndex] ===
+                        "correct"
+                          ? "text-emerald-700"
+                          : "text-rose-600";
+                    }
+
+                    if (!isFinished && globalIndex === activeWordIndex) {
+                      className = "rounded bg-amber-300 px-1 text-slate-900";
+                    }
+
+                    return (
+                      <span
+                        key={`${word}-${globalIndex}`}
+                        data-active={
+                          !isFinished && globalIndex === activeWordIndex
+                        }
+                        className={`${className} mr-2 inline-block`}
+                      >
+                        {word}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <p className="leading-8 sm:text-lg">
+                {passageWindow.start > 0 && (
+                  <span className="text-black">... </span>
+                )}
+                {passageWindow.chars.map((char, index) => {
+                  const absoluteIndex = passageWindow.start + index;
                   let className = "text-black";
 
-                  if (globalIndex < liveWordEvaluation.wordStatuses.length) {
-                    className =
-                      liveWordEvaluation.wordStatuses[globalIndex] === "correct"
-                        ? "text-emerald-700"
-                        : "text-rose-600";
+                  if (passageCharStates) {
+                    const status = passageCharStates[absoluteIndex];
+                    if (status === "correct") {
+                      className = "text-emerald-700";
+                    } else if (status === "incorrect") {
+                      className = "text-rose-600";
+                    }
                   }
 
-                  if (!isFinished && globalIndex === activeWordIndex) {
-                    className = "rounded bg-amber-300 px-1 text-slate-900";
+                  if (!isFinished && absoluteIndex === currentCharIndex) {
+                    className =
+                      "rounded bg-amber-300 px-[1px] text-slate-900 shadow-[0_0_0_1px_rgba(251,191,36,0.45)]";
                   }
 
                   return (
                     <span
-                      key={`${word}-${globalIndex}`}
-                      data-active={
-                        !isFinished && globalIndex === activeWordIndex
-                      }
-                      className={`${className} mr-2 inline-block`}
+                      key={`${char}-${absoluteIndex}`}
+                      className={className}
                     >
-                      {word}
+                      {char}
                     </span>
                   );
                 })}
-              </div>
-            </div>
-          ) : (
-            <p className="leading-8 sm:text-lg">
-              {passageWindow.start > 0 && (
-                <span className="text-black">... </span>
-              )}
-              {passageWindow.chars.map((char, index) => {
-                const absoluteIndex = passageWindow.start + index;
-                let className = "text-black";
-
-                if (passageCharStates) {
-                  const status = passageCharStates[absoluteIndex];
-                  if (status === "correct") {
-                    className = "text-emerald-700";
-                  } else if (status === "incorrect") {
-                    className = "text-rose-600";
-                  }
-                }
-
-                if (!isFinished && absoluteIndex === currentCharIndex) {
-                  className =
-                    "rounded bg-amber-300 px-[1px] text-slate-900 shadow-[0_0_0_1px_rgba(251,191,36,0.45)]";
-                }
-
-                return (
-                  <span key={`${char}-${absoluteIndex}`} className={className}>
-                    {char}
-                  </span>
-                );
-              })}
-            </p>
-          )}
-        </section>
+              </p>
+            )}
+          </section>
+        ) : null}
 
         <section className="mt-5 rounded-2xl border border-white/15 bg-black/25 p-5 sm:p-7">
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-[0.15em] text-cyan-100">
