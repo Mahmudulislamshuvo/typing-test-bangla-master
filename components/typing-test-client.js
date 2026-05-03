@@ -37,6 +37,7 @@ function normalizeText(text, lang, isClassic = false) {
 }
 
 const BENGALI_UNICODE_RE = /[\u0980-\u09FF]/;
+const TRAILING_PUNCT_RE = /^[\p{P}\p{S}]+|[\p{P}\p{S}]+$/gu;
 
 function hasBengaliUnicode(text) {
   return BENGALI_UNICODE_RE.test(text || "");
@@ -50,6 +51,11 @@ function normalizeClassicComparable(text) {
   }
   const converted = bnAnsiToUnicode(cleaned);
   return normalizeText(converted, "bn", false);
+}
+
+function normalizeClassicWordKey(word) {
+  const normalized = normalizeText(word, "bn", false);
+  return normalized.replace(TRAILING_PUNCT_RE, "");
 }
 
 function splitGraphemes(text, locale, isClassic = false) {
@@ -303,17 +309,18 @@ export default function TypingTestClient({
     Array.isArray(languageOptions) && languageOptions.length
       ? languageOptions
       : LANGUAGE_OPTIONS;
-  const typingFontClassName = isClassicMode
+  const useClassicFont = isClassicMode && !hasBengaliUnicode(typedText);
+  const typingFontClassName = useClassicFont
     ? "font-bijoy-classic"
     : isBangla
       ? "[font-family:var(--font-bengali)]"
       : "";
-  const inputFontClassName = isClassicMode
+  const inputFontClassName = useClassicFont
     ? "font-bijoy-classic placeholder:font-sans text-2xl leading-9 sm:text-3xl sm:leading-10"
     : isBangla
       ? "[font-family:var(--font-bengali)]"
       : "";
-  const typingPlaceholder = isClassicMode
+  const typingPlaceholder = useClassicFont
     ? "Type using Bijoy Classic here..."
     : isBangla
       ? "এখানে টাইপ করা শুরু করুন..."
@@ -499,7 +506,16 @@ export default function TypingTestClient({
       liveTypedWords.length,
       false,
     );
-    const wordStatuses = alignStrictWords(liveTypedWords, targetSlice);
+    const comparisonTypedWords = isClassicMode
+      ? liveTypedWords.map(normalizeClassicWordKey)
+      : liveTypedWords;
+    const comparisonTargetWords = isClassicMode
+      ? targetSlice.map(normalizeClassicWordKey)
+      : targetSlice;
+    const wordStatuses = alignStrictWords(
+      comparisonTypedWords,
+      comparisonTargetWords,
+    );
     const correctWords = wordStatuses.filter(
       (status) => status === "correct",
     ).length;
@@ -511,7 +527,7 @@ export default function TypingTestClient({
       return acc;
     }, 0);
     return { correctWords, incorrectWords, wordStatuses, correctStrokes };
-  }, [effectiveTargetWords, liveTypedWords]);
+  }, [effectiveTargetWords, isClassicMode, liveTypedWords]);
 
   const finalWordEvaluation = useMemo(() => {
     const targetSlice = getTargetSlice(
@@ -519,7 +535,16 @@ export default function TypingTestClient({
       finalTypedWords.length,
       true,
     );
-    const wordStatuses = alignStrictWords(finalTypedWords, targetSlice);
+    const comparisonTypedWords = isClassicMode
+      ? finalTypedWords.map(normalizeClassicWordKey)
+      : finalTypedWords;
+    const comparisonTargetWords = isClassicMode
+      ? targetSlice.map(normalizeClassicWordKey)
+      : targetSlice;
+    const wordStatuses = alignStrictWords(
+      comparisonTypedWords,
+      comparisonTargetWords,
+    );
     const correctWords = wordStatuses.filter(
       (status) => status === "correct",
     ).length;
@@ -532,11 +557,11 @@ export default function TypingTestClient({
     }, 0);
 
     return { correctWords, incorrectWords, wordStatuses, correctStrokes };
-  }, [effectiveTargetWords, finalTypedWords]);
+  }, [effectiveTargetWords, finalTypedWords, isClassicMode]);
 
   const wordStats = isFinished ? finalWordEvaluation : liveWordEvaluation;
   const effectiveCorrectStrokes = isClassicMode
-    ? progress.correctKeystrokes
+    ? wordStats.correctWords * 5
     : wordStats.correctStrokes;
 
   const typedWordReport = useMemo(
@@ -635,8 +660,19 @@ export default function TypingTestClient({
     elapsedSeconds > 0
       ? Math.round(standardWordsTyped / (elapsedSeconds / 60))
       : 0;
-  const accuracy =
-    progress.typedKeystrokes > 0
+  const wordAccuracy =
+    wordStats.correctWords + wordStats.incorrectWords > 0
+      ? Number(
+          (
+            (wordStats.correctWords /
+              (wordStats.correctWords + wordStats.incorrectWords)) *
+            100
+          ).toFixed(1),
+        )
+      : 100;
+  const accuracy = isClassicMode
+    ? wordAccuracy
+    : progress.typedKeystrokes > 0
       ? Number(
           ((effectiveCorrectStrokes / progress.typedKeystrokes) * 100).toFixed(
             1,
