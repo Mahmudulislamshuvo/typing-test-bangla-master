@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { usePathname } from "next/navigation";
+import bnAnsiToUnicode from "bn-ansi-to-unicode";
 import { log } from "firebase/firestore/pipelines";
 
 const DURATION_OPTIONS = [1, 2, 3, 5, 10, 15, 20];
@@ -33,6 +34,22 @@ function normalizeText(text, lang, isClassic = false) {
       .replace(/\u0965/g, "।");
   }
   return normalized;
+}
+
+const BENGALI_UNICODE_RE = /[\u0980-\u09FF]/;
+
+function hasBengaliUnicode(text) {
+  return BENGALI_UNICODE_RE.test(text || "");
+}
+
+function normalizeClassicComparable(text) {
+  if (!text) return "";
+  const cleaned = normalizeText(text, "bn", true);
+  if (hasBengaliUnicode(cleaned)) {
+    return normalizeText(cleaned, "bn", false);
+  }
+  const converted = bnAnsiToUnicode(cleaned);
+  return normalizeText(converted, "bn", false);
 }
 
 function splitGraphemes(text, locale, isClassic = false) {
@@ -394,23 +411,63 @@ export default function TypingTestClient({
     : DURATION_OPTIONS;
 
   const targetText = useMemo(() => targetWords.join(" "), [targetWords]);
+  const comparisonTargetText = useMemo(() => {
+    if (!isClassicMode) return targetText;
+    return normalizeClassicComparable(targetText);
+  }, [isClassicMode, targetText]);
+  const comparisonTypedText = useMemo(() => {
+    if (!isClassicMode) return typedText;
+    return normalizeClassicComparable(typedText);
+  }, [isClassicMode, typedText]);
+
   const targetChars = useMemo(
-    () => splitGraphemes(targetText, locale, isClassicMode),
-    [targetText, locale, isClassicMode],
+    () =>
+      splitGraphemes(
+        isClassicMode ? comparisonTargetText : targetText,
+        locale,
+        false,
+      ),
+    [comparisonTargetText, isClassicMode, locale, targetText],
   );
   const typedChars = useMemo(
-    () => splitGraphemes(typedText, locale, isClassicMode),
-    [typedText, locale, isClassicMode],
+    () =>
+      splitGraphemes(
+        isClassicMode ? comparisonTypedText : typedText,
+        locale,
+        false,
+      ),
+    [comparisonTypedText, isClassicMode, locale, typedText],
   );
 
   const liveTypedWords = useMemo(
-    () => splitStrictWords(typedText, locale, false, isClassicMode),
-    [typedText, locale, isClassicMode],
+    () =>
+      splitStrictWords(
+        isClassicMode ? comparisonTypedText : typedText,
+        locale,
+        false,
+        false,
+      ),
+    [comparisonTypedText, isClassicMode, locale, typedText],
   );
   const finalTypedWords = useMemo(
-    () => splitStrictWords(typedText, locale, true, isClassicMode),
-    [typedText, locale, isClassicMode],
+    () =>
+      splitStrictWords(
+        isClassicMode ? comparisonTypedText : typedText,
+        locale,
+        true,
+        false,
+      ),
+    [comparisonTypedText, isClassicMode, locale, typedText],
   );
+
+  const comparisonTargetWords = useMemo(() => {
+    if (!isClassicMode) return targetWords;
+    return splitStrictWords(comparisonTargetText, locale, true, false);
+  }, [comparisonTargetText, isClassicMode, locale, targetWords]);
+
+  const effectiveTargetWords = isClassicMode
+    ? comparisonTargetWords
+    : targetWords;
 
   const activeWordIndex = liveTypedWords.length;
 
@@ -438,7 +495,7 @@ export default function TypingTestClient({
 
   const liveWordEvaluation = useMemo(() => {
     const targetSlice = getTargetSlice(
-      targetWords,
+      effectiveTargetWords,
       liveTypedWords.length,
       false,
     );
@@ -454,11 +511,11 @@ export default function TypingTestClient({
       return acc;
     }, 0);
     return { correctWords, incorrectWords, wordStatuses, correctStrokes };
-  }, [liveTypedWords, targetWords]);
+  }, [effectiveTargetWords, liveTypedWords]);
 
   const finalWordEvaluation = useMemo(() => {
     const targetSlice = getTargetSlice(
-      targetWords,
+      effectiveTargetWords,
       finalTypedWords.length,
       true,
     );
@@ -475,7 +532,7 @@ export default function TypingTestClient({
     }, 0);
 
     return { correctWords, incorrectWords, wordStatuses, correctStrokes };
-  }, [finalTypedWords, targetWords]);
+  }, [effectiveTargetWords, finalTypedWords]);
 
   const wordStats = isFinished ? finalWordEvaluation : liveWordEvaluation;
   const effectiveCorrectStrokes = isClassicMode
@@ -589,6 +646,10 @@ export default function TypingTestClient({
   const strokeWiseCorrectWords = isBangla
     ? Math.round(effectiveCorrectStrokes / 5)
     : null;
+  const reportInputMode =
+    isClassicMode && !hasBengaliUnicode(typedText)
+      ? "bijoy-classic"
+      : "unicode";
 
   const timeLabel = isUnlimited
     ? "Unlimited"
@@ -604,15 +665,18 @@ export default function TypingTestClient({
     }
 
     const hasTrailingSpace = /\s$/u.test(typedText);
-    const maxWordIndex = Math.max(targetWords.length - 1, 0);
+    const maxWordIndex = Math.max(effectiveTargetWords.length - 1, 0);
 
     if (hasTrailingSpace) {
-      const nextWordIndex = Math.min(liveTypedWords.length, targetWords.length);
+      const nextWordIndex = Math.min(
+        liveTypedWords.length,
+        effectiveTargetWords.length,
+      );
       const wordStartIndex = getWordStartIndex(
-        targetWords,
+        effectiveTargetWords,
         nextWordIndex,
         locale,
-        isClassicMode,
+        false,
       );
       return Math.min(wordStartIndex, maxCharIndex);
     }
@@ -622,26 +686,21 @@ export default function TypingTestClient({
       maxWordIndex,
     );
     const currentWord = finalTypedWords[currentWordIndex] || "";
-    const currentWordLength = splitGraphemes(
-      currentWord,
-      locale,
-      isClassicMode,
-    ).length;
+    const currentWordLength = splitGraphemes(currentWord, locale, false).length;
     const wordStartIndex = getWordStartIndex(
-      targetWords,
+      effectiveTargetWords,
       currentWordIndex,
       locale,
-      isClassicMode,
+      false,
     );
     return Math.min(wordStartIndex + currentWordLength, maxCharIndex);
   }, [
     displayMode,
     finalTypedWords,
     liveTypedWords.length,
-    isClassicMode,
+    effectiveTargetWords,
     locale,
     targetChars.length,
-    targetWords,
     typedChars.length,
     typedText,
   ]);
@@ -649,12 +708,12 @@ export default function TypingTestClient({
   const passageCharStates = useMemo(() => {
     if (displayMode !== "passage") return null;
     return buildPassageCharStates(
-      targetWords,
+      effectiveTargetWords,
       finalTypedWords,
       locale,
-      isClassicMode,
+      false,
     );
-  }, [displayMode, finalTypedWords, isClassicMode, locale, targetWords]);
+  }, [displayMode, effectiveTargetWords, finalTypedWords, locale]);
 
   const passageWindow = useMemo(() => {
     const start = Math.max(0, currentCharIndex - 220);
@@ -667,13 +726,13 @@ export default function TypingTestClient({
 
   const tickerWindow = useMemo(() => {
     const start = Math.max(0, activeWordIndex - 8);
-    const end = Math.min(targetWords.length, activeWordIndex + 36);
+    const end = Math.min(effectiveTargetWords.length, activeWordIndex + 36);
     return {
       start,
       end,
-      words: targetWords.slice(start, end),
+      words: effectiveTargetWords.slice(start, end),
     };
-  }, [activeWordIndex, targetWords]);
+  }, [activeWordIndex, effectiveTargetWords]);
 
   useLayoutEffect(() => {
     if (displayMode !== "ticker" || !tickerContainerRef.current) return;
@@ -1013,7 +1072,7 @@ export default function TypingTestClient({
               finalWordEvaluation.incorrectWords,
             strokeWiseCorrectWords,
             wordTimings: timingPayload.length ? timingPayload : undefined,
-            inputMode: isClassicMode ? "bijoy-classic" : "unicode",
+            inputMode: reportInputMode,
             date: new Date(),
           }),
         });
@@ -1035,6 +1094,7 @@ export default function TypingTestClient({
     effectiveCorrectStrokes,
     isCustomSource,
     isClassicMode,
+    reportInputMode,
     strokeWiseCorrectWords,
     wordTimings,
   ]);
