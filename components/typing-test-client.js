@@ -23,6 +23,7 @@ const LANGUAGE_OPTIONS = [
 
 function normalizeText(text, lang, isClassic = false) {
   let normalized = (text || "").normalize("NFC");
+  normalized = normalized.replace(/[\u200B-\u200D\uFEFF]/g, "");
   if (isClassic) return normalized;
   // Normalize various danda forms to standard Bengali danda if likely Bengali
   if (lang === "bn" || /[\u0980-\u09FF]/.test(normalized)) {
@@ -477,6 +478,9 @@ export default function TypingTestClient({
   }, [finalTypedWords, targetWords]);
 
   const wordStats = isFinished ? finalWordEvaluation : liveWordEvaluation;
+  const effectiveCorrectStrokes = isClassicMode
+    ? progress.correctKeystrokes
+    : wordStats.correctStrokes;
 
   const typedWordReport = useMemo(
     () => buildWordReport(typedText, finalWordEvaluation.wordStatuses),
@@ -577,11 +581,14 @@ export default function TypingTestClient({
   const accuracy =
     progress.typedKeystrokes > 0
       ? Number(
-          ((wordStats.correctStrokes / progress.typedKeystrokes) * 100).toFixed(
+          ((effectiveCorrectStrokes / progress.typedKeystrokes) * 100).toFixed(
             1,
           ),
         )
       : 100;
+  const strokeWiseCorrectWords = isBangla
+    ? Math.round(effectiveCorrectStrokes / 5)
+    : null;
 
   const timeLabel = isUnlimited
     ? "Unlimited"
@@ -999,15 +1006,14 @@ export default function TypingTestClient({
             duration: durationMin,
             mode: displayMode,
             testType: isCustomSource ? "Custom" : "Standard",
-            correctStrokes: finalWordEvaluation.correctStrokes,
+            correctStrokes: effectiveCorrectStrokes,
             correctWords: finalWordEvaluation.correctWords,
             totalWords:
               finalWordEvaluation.correctWords +
               finalWordEvaluation.incorrectWords,
-            strokeWiseCorrectWords: isBangla
-              ? Math.round(finalWordEvaluation.correctStrokes / 5)
-              : null,
+            strokeWiseCorrectWords,
             wordTimings: timingPayload.length ? timingPayload : undefined,
+            inputMode: isClassicMode ? "bijoy-classic" : "unicode",
             date: new Date(),
           }),
         });
@@ -1026,7 +1032,10 @@ export default function TypingTestClient({
     durationMin,
     displayMode,
     finalWordEvaluation,
+    effectiveCorrectStrokes,
     isCustomSource,
+    isClassicMode,
+    strokeWiseCorrectWords,
     wordTimings,
   ]);
 
@@ -1292,9 +1301,7 @@ export default function TypingTestClient({
               {isBangla && (
                 <FinishRow
                   label="Stroke Wise Correct Word"
-                  value={String(
-                    Math.round(finalWordEvaluation.correctStrokes / 5),
-                  )}
+                  value={String(strokeWiseCorrectWords ?? 0)}
                 />
               )}
               {isUnlimited && (

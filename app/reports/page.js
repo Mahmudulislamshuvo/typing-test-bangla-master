@@ -263,6 +263,23 @@ export default function ReportsPage() {
   );
 }
 
+function containsBengaliChars(text) {
+  return /[\u0980-\u09FF]/.test(text || "");
+}
+
+function inferClassicReport(report) {
+  if (report?.inputMode) {
+    return report.inputMode === "bijoy-classic";
+  }
+  if (report?.language !== "bn") return false;
+  const timings = Array.isArray(report?.wordTimings) ? report.wordTimings : [];
+  const sample = timings.find(
+    (entry) => typeof entry?.word === "string" && entry.word.trim(),
+  );
+  if (!sample) return false;
+  return !containsBengaliChars(sample.word);
+}
+
 function ReportTimingChart({ report }) {
   const [zoom, setZoom] = useState(1);
   const [hoveredIndex, setHoveredIndex] = useState(null);
@@ -280,6 +297,12 @@ function ReportTimingChart({ report }) {
   const minWpm = Math.min(...wpmValues, 0);
   const range = maxWpm - minWpm || 1;
   const isBangla = report.language === "bn";
+  const isClassicReport = inferClassicReport(report);
+  const wordFontClass = isClassicReport
+    ? "font-bijoy-classic"
+    : isBangla
+      ? "[font-family:var(--font-bengali)]"
+      : "";
   const sortedTimings = [...timings]
     .map((entry, index) => ({ ...entry, _index: index }))
     .sort((a, b) => {
@@ -439,7 +462,7 @@ function ReportTimingChart({ report }) {
                 transform: `translate(${hoveredIndex > points.length * 0.7 ? "-90%" : hoveredIndex < points.length * 0.3 ? "-10%" : "-50%"}, ${points[hoveredIndex].y < 180 ? "15%" : "-110%"})`,
               }}
             >
-              <div className="font-semibold text-amber-200">
+              <div className={`font-semibold text-amber-200 ${wordFontClass}`}>
                 {timings[hoveredIndex]?.word || "-"}
               </div>
               <div className="text-slate-200/70">Index: {hoveredIndex + 1}</div>
@@ -480,9 +503,7 @@ function ReportTimingChart({ report }) {
                   #
                 </th>
                 <th
-                  className={`px-4 py-3 font-semibold text-slate-300 ${
-                    isBangla ? "[font-family:var(--font-bengali)]" : ""
-                  }`}
+                  className={`px-4 py-3 font-semibold text-slate-300 ${wordFontClass}`}
                 >
                   {isBangla ? "শব্দ" : "Word"}
                 </th>
@@ -510,9 +531,7 @@ function ReportTimingChart({ report }) {
                   >
                     <td className="px-4 py-2 text-slate-400/80">{idx + 1}</td>
                     <td
-                      className={`px-4 py-2 font-medium ${highlightClass} ${
-                        isBangla ? "[font-family:var(--font-bengali)]" : ""
-                      }`}
+                      className={`px-4 py-2 font-medium ${highlightClass} ${wordFontClass}`}
                     >
                       {entry.word || "-"}
                     </td>

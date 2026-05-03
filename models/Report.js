@@ -50,6 +50,10 @@ const ReportSchema = new mongoose.Schema({
     type: Number,
     required: false,
   },
+  inputMode: {
+    type: String,
+    required: false,
+  },
   wordTimings: {
     type: [
       {
