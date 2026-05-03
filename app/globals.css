@@ -3,17 +3,32 @@
 @tailwind utilities;
 
 :root {
-	color-scheme: dark;
-	--auth-bg: #0b1014;
-	--auth-card: rgba(15, 23, 42, 0.7);
-	--auth-stroke: rgba(52, 211, 153, 0.25);
+  color-scheme: dark;
+  --auth-bg: #0b1014;
+  --auth-card: rgba(15, 23, 42, 0.7);
+  --auth-stroke: rgba(52, 211, 153, 0.25);
 }
 
 html,
 body {
-	min-height: 100%;
+  min-height: 100%;
 }
 
 body {
-	font-family: var(--font-manrope), "Segoe UI", sans-serif;
+  font-family: var(--font-manrope), "Segoe UI", sans-serif;
+}
+
+@font-face {
+  font-family: "SutonnyMJ";
+  src:
+    local("SutonnyMJ"),
+    local("SutonnyMJ Regular"),
+    url("/fonts/SutonnyMJ%20Regular.ttf") format("truetype");
+  font-display: swap;
+}
+
+.font-bijoy-classic {
+  font-family:
+    "SutonnyMJ", "SutonnyMJ Regular", var(--font-bengali), "Segoe UI",
+    sans-serif;
 }

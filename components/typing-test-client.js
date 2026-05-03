@@ -21,8 +21,9 @@ const LANGUAGE_OPTIONS = [
   { value: "bn", label: "বাংলা" },
 ];
 
-function normalizeText(text, lang) {
+function normalizeText(text, lang, isClassic = false) {
   let normalized = (text || "").normalize("NFC");
+  if (isClassic) return normalized;
   // Normalize various danda forms to standard Bengali danda if likely Bengali
   if (lang === "bn" || /[\u0980-\u09FF]/.test(normalized)) {
     return normalized
@@ -33,8 +34,8 @@ function normalizeText(text, lang) {
   return normalized;
 }
 
-function splitGraphemes(text, locale) {
-  const cleanText = normalizeText(text, locale);
+function splitGraphemes(text, locale, isClassic = false) {
+  const cleanText = normalizeText(text, locale, isClassic);
   if (typeof Intl !== "undefined" && Intl.Segmenter) {
     const segmenter = new Intl.Segmenter(locale, { granularity: "grapheme" });
     return Array.from(segmenter.segment(cleanText), (x) => x.segment);
@@ -42,13 +43,18 @@ function splitGraphemes(text, locale) {
   return Array.from(cleanText);
 }
 
-function splitStrictWords(text, lang, includeTrailingPartial = false) {
+function splitStrictWords(
+  text,
+  lang,
+  includeTrailingPartial = false,
+  isClassic = false,
+) {
   if (typeof lang === "boolean") {
     includeTrailingPartial = lang;
     lang = undefined;
   }
 
-  const normalized = normalizeText(text, lang).replace(/\n/g, " ");
+  const normalized = normalizeText(text, lang, isClassic).replace(/\n/g, " ");
   if (!normalized.trim()) return [];
 
   const words = (normalized.match(/\S+/gu) || []).slice();
@@ -176,26 +182,31 @@ function getTargetSlice(targetWords, typedWordCount, isFinal) {
   return targetWords.slice(0, length);
 }
 
-function getWordStartIndex(targetWords, wordIndex, locale) {
+function getWordStartIndex(targetWords, wordIndex, locale, isClassic = false) {
   let index = 0;
   const maxIndex = Math.max(0, Math.min(wordIndex, targetWords.length));
 
   for (let i = 0; i < maxIndex; i += 1) {
-    index += splitGraphemes(targetWords[i], locale).length + 1;
+    index += splitGraphemes(targetWords[i], locale, isClassic).length + 1;
   }
 
   return index;
 }
 
-function buildPassageCharStates(targetWords, typedWords, locale) {
+function buildPassageCharStates(
+  targetWords,
+  typedWords,
+  locale,
+  isClassic = false,
+) {
   const states = [];
   let cursor = 0;
 
   for (let i = 0; i < targetWords.length; i += 1) {
     const targetWord = targetWords[i] || "";
     const typedWord = typedWords[i] || "";
-    const targetChars = splitGraphemes(targetWord, locale);
-    const typedChars = splitGraphemes(typedWord, locale);
+    const targetChars = splitGraphemes(targetWord, locale, isClassic);
+    const typedChars = splitGraphemes(typedWord, locale, isClassic);
 
     for (let j = 0; j < targetChars.length; j += 1) {
       if (typedChars.length > j) {
@@ -217,8 +228,8 @@ function buildPassageCharStates(targetWords, typedWords, locale) {
   return states;
 }
 
-function buildCustomWords(text, lang) {
-  const normalized = normalizeText(text, lang).replace(/\n/g, " ");
+function buildCustomWords(text, lang, isClassic = false) {
+  const normalized = normalizeText(text, lang, isClassic).replace(/\n/g, " ");
   const words = (normalized.match(/\S+/gu) || []).map((word) => word.trim());
   return words.filter(Boolean);
 }
@@ -240,9 +251,13 @@ export default function TypingTestClient({
   initialUsedIndex = -1,
   sourceMode = "remote",
   customSourceText = "",
+  inputMode = "unicode",
+  languageOptions,
 }) {
   const pathname = usePathname();
-  const showTargetText = !pathname?.startsWith("/custom-typing");
+  const hideTargetText =
+    pathname?.startsWith("/custom-typing") || pathname?.startsWith("/classic");
+  const showTargetText = !hideTargetText;
 
   const isCustomSource = sourceMode === "custom";
   const [language, setLanguage] = useState(initialLanguage);
@@ -263,6 +278,28 @@ export default function TypingTestClient({
   const [loadError, setLoadError] = useState("");
   const [hoveredWordIndex, setHoveredWordIndex] = useState(null);
   const [chartZoom, setChartZoom] = useState(1);
+
+  const isClassicMode = inputMode === "bijoy-classic";
+  const isBangla = language === "bn";
+  const resolvedLanguageOptions =
+    Array.isArray(languageOptions) && languageOptions.length
+      ? languageOptions
+      : LANGUAGE_OPTIONS;
+  const typingFontClassName = isClassicMode
+    ? "font-bijoy-classic"
+    : isBangla
+      ? "[font-family:var(--font-bengali)]"
+      : "";
+  const inputFontClassName = isClassicMode
+    ? "font-bijoy-classic placeholder:font-sans"
+    : isBangla
+      ? "[font-family:var(--font-bengali)]"
+      : "";
+  const typingPlaceholder = isClassicMode
+    ? "Type using Bijoy Classic here..."
+    : isBangla
+      ? "এখানে টাইপ করা শুরু করুন..."
+      : "Start typing here...";
 
   const isFetchingMoreRef = useRef(false);
   const skipInitialSelectionReloadRef = useRef(true);
@@ -349,7 +386,7 @@ export default function TypingTestClient({
   );
 
   const isUnlimited = isCustomSource && durationMin === 0;
-  const locale = language === "bn" ? "bn" : "en";
+  const locale = isBangla ? "bn" : "en";
   const totalSeconds = durationMin * 60;
   const durationOptions = isCustomSource
     ? [...DURATION_OPTIONS, 0]
@@ -357,21 +394,21 @@ export default function TypingTestClient({
 
   const targetText = useMemo(() => targetWords.join(" "), [targetWords]);
   const targetChars = useMemo(
-    () => splitGraphemes(targetText, locale),
-    [targetText, locale],
+    () => splitGraphemes(targetText, locale, isClassicMode),
+    [targetText, locale, isClassicMode],
   );
   const typedChars = useMemo(
-    () => splitGraphemes(typedText, locale),
-    [typedText, locale],
+    () => splitGraphemes(typedText, locale, isClassicMode),
+    [typedText, locale, isClassicMode],
   );
 
   const liveTypedWords = useMemo(
-    () => splitStrictWords(typedText, locale, false),
-    [typedText, locale],
+    () => splitStrictWords(typedText, locale, false, isClassicMode),
+    [typedText, locale, isClassicMode],
   );
   const finalTypedWords = useMemo(
-    () => splitStrictWords(typedText, locale, true),
-    [typedText, locale],
+    () => splitStrictWords(typedText, locale, true, isClassicMode),
+    [typedText, locale, isClassicMode],
   );
 
   const activeWordIndex = liveTypedWords.length;
@@ -568,6 +605,7 @@ export default function TypingTestClient({
         targetWords,
         nextWordIndex,
         locale,
+        isClassicMode,
       );
       return Math.min(wordStartIndex, maxCharIndex);
     }
@@ -577,17 +615,23 @@ export default function TypingTestClient({
       maxWordIndex,
     );
     const currentWord = finalTypedWords[currentWordIndex] || "";
-    const currentWordLength = splitGraphemes(currentWord, locale).length;
+    const currentWordLength = splitGraphemes(
+      currentWord,
+      locale,
+      isClassicMode,
+    ).length;
     const wordStartIndex = getWordStartIndex(
       targetWords,
       currentWordIndex,
       locale,
+      isClassicMode,
     );
     return Math.min(wordStartIndex + currentWordLength, maxCharIndex);
   }, [
     displayMode,
     finalTypedWords,
     liveTypedWords.length,
+    isClassicMode,
     locale,
     targetChars.length,
     targetWords,
@@ -597,8 +641,13 @@ export default function TypingTestClient({
 
   const passageCharStates = useMemo(() => {
     if (displayMode !== "passage") return null;
-    return buildPassageCharStates(targetWords, finalTypedWords, locale);
-  }, [displayMode, finalTypedWords, locale, targetWords]);
+    return buildPassageCharStates(
+      targetWords,
+      finalTypedWords,
+      locale,
+      isClassicMode,
+    );
+  }, [displayMode, finalTypedWords, isClassicMode, locale, targetWords]);
 
   const passageWindow = useMemo(() => {
     const start = Math.max(0, currentCharIndex - 220);
@@ -680,7 +729,7 @@ export default function TypingTestClient({
       const words = Array.isArray(payload?.words)
         ? payload.words
             .filter((word) => typeof word === "string" && word.trim())
-            .map((word) => normalizeText(word, lang))
+            .map((word) => normalizeText(word, lang, isClassicMode))
         : [];
 
       if (!words.length) {
@@ -689,7 +738,7 @@ export default function TypingTestClient({
 
       return words;
     },
-    [getNextIndex, savePlaylist],
+    [getNextIndex, isClassicMode, savePlaylist],
   );
 
   const replaceSource = useCallback(
@@ -709,7 +758,11 @@ export default function TypingTestClient({
 
       try {
         if (isCustomSource) {
-          const wordsData = buildCustomWords(customSourceText, lang);
+          const wordsData = buildCustomWords(
+            customSourceText,
+            lang,
+            isClassicMode,
+          );
           if (!wordsData.length) {
             throw new Error("Custom typing text is empty.");
           }
@@ -727,7 +780,14 @@ export default function TypingTestClient({
         setIsLoadingSource(false);
       }
     },
-    [customSourceText, durationMin, fetchWordChunk, isCustomSource, language],
+    [
+      customSourceText,
+      durationMin,
+      fetchWordChunk,
+      isClassicMode,
+      isCustomSource,
+      language,
+    ],
   );
 
   const appendMoreWords = useCallback(
@@ -850,7 +910,7 @@ export default function TypingTestClient({
       setIsRunning(true);
     }
 
-    const wordsNow = splitStrictWords(value, locale, true);
+    const wordsNow = splitStrictWords(value, locale, true, isClassicMode);
     const targetLength = value === "" ? 0 : wordsNow.length;
     const currentIndex = targetLength > 0 ? targetLength - 1 : 0;
 
@@ -944,10 +1004,9 @@ export default function TypingTestClient({
             totalWords:
               finalWordEvaluation.correctWords +
               finalWordEvaluation.incorrectWords,
-            strokeWiseCorrectWords:
-              language === "bn"
-                ? Math.round(finalWordEvaluation.correctStrokes / 5)
-                : null,
+            strokeWiseCorrectWords: isBangla
+              ? Math.round(finalWordEvaluation.correctStrokes / 5)
+              : null,
             wordTimings: timingPayload.length ? timingPayload : undefined,
             date: new Date(),
           }),
@@ -1009,7 +1068,7 @@ export default function TypingTestClient({
                 onChange={(event) => setLanguage(event.target.value)}
                 className="rounded-xl border border-emerald-100/30 bg-slate-950/45 px-4 py-3 text-sm font-semibold text-white outline-none ring-0 transition focus:border-amber-300"
               >
-                {LANGUAGE_OPTIONS.map((option) => (
+                {resolvedLanguageOptions.map((option) => (
                   <option key={option.value} value={option.value}>
                     {option.label}
                   </option>
@@ -1077,7 +1136,7 @@ export default function TypingTestClient({
         {showTargetText ? (
           <section
             className={`rounded-2xl border border-white/15 bg-white/90 p-5 sm:p-7 ${
-              language === "bn" ? "[font-family:var(--font-bengali)]" : ""
+              typingFontClassName
             }`}
           >
             <h2 className="mb-4 text-sm font-semibold uppercase tracking-[0.15em] text-slate-700">
@@ -1175,14 +1234,10 @@ export default function TypingTestClient({
             value={typedText}
             onChange={handleTypingChange}
             disabled={isFinished || isLoadingSource || Boolean(loadError)}
-            placeholder={
-              language === "bn"
-                ? "এখানে টাইপ করা শুরু করুন..."
-                : "Start typing here..."
-            }
+            placeholder={typingPlaceholder}
             rows={8}
             className={`w-full resize-none rounded-2xl border border-cyan-100/20 bg-slate-950/55 p-4 text-xl leading-8 text-white outline-none transition focus:border-amber-300 focus:ring-2 focus:ring-amber-300/30 sm:text-2xl ${
-              language === "bn" ? "[font-family:var(--font-bengali)]" : ""
+              inputFontClassName
             }`}
             onPaste={(event) => event.preventDefault()}
             onDrop={(event) => event.preventDefault()}
@@ -1234,7 +1289,7 @@ export default function TypingTestClient({
             <h3 className="mt-2 text-3xl font-extrabold">Detailed Report</h3>
 
             <div className="mt-5 space-y-3 rounded-2xl bg-black/20 p-4">
-              {language === "bn" && (
+              {isBangla && (
                 <FinishRow
                   label="Stroke Wise Correct Word"
                   value={String(
@@ -1603,7 +1658,7 @@ export default function TypingTestClient({
               </h4>
               <p
                 className={`mt-3 max-h-56 overflow-y-auto whitespace-pre-wrap rounded-xl bg-slate-950/45 p-3 text-sm leading-7 sm:text-base ${
-                  language === "bn" ? "[font-family:var(--font-bengali)]" : ""
+                  typingFontClassName
                 }`}
               >
                 {typedWordReport.length > 0 ? (
