@@ -291,7 +291,7 @@ export default function TypingTestClient({
       ? "[font-family:var(--font-bengali)]"
       : "";
   const inputFontClassName = isClassicMode
-    ? "font-bijoy-classic placeholder:font-sans"
+    ? "font-bijoy-classic placeholder:font-sans text-2xl leading-9 sm:text-3xl sm:leading-10"
     : isBangla
       ? "[font-family:var(--font-bengali)]"
       : "";
