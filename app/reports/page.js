@@ -5,8 +5,18 @@ import Link from "next/link";
 import PusherClient from "pusher-js";
 import toast, { Toaster } from "react-hot-toast";
 
+const PAGE_SIZE = 15;
+
+function mergeReportsById(existing, incoming) {
+  const existingIds = new Set(existing.map((report) => report._id));
+  const filtered = incoming.filter((report) => !existingIds.has(report._id));
+  return [...existing, ...filtered];
+}
+
 export default function ReportsPage() {
   const [groupedReports, setGroupedReports] = useState({});
+  const [deviceTotals, setDeviceTotals] = useState({});
+  const [deviceLoading, setDeviceLoading] = useState({});
   const [loading, setLoading] = useState(true);
   const [expandedDevices, setExpandedDevices] = useState({});
   const [showGraphs, setShowGraphs] = useState(false);
@@ -15,26 +25,36 @@ export default function ReportsPage() {
   useEffect(() => {
     let isMounted = true;
 
-    const fetchReports = () => {
-      fetch(`/api/reports?t=${Date.now()}`)
-        .then((res) => res.json())
-        .then((data) => {
-          if (!isMounted) return;
-          if (data.success) {
-            const grouped = data.data.reduce((acc, report) => {
-              if (!acc[report.deviceName]) acc[report.deviceName] = [];
-              acc[report.deviceName].push(report);
-              return acc;
-            }, {});
-            setGroupedReports(grouped);
-          }
+    const fetchReports = async () => {
+      try {
+        const res = await fetch(
+          `/api/reports?limit=${PAGE_SIZE}&t=${Date.now()}`,
+        );
+        const data = await res.json();
+        if (!isMounted) return;
+        if (data.success) {
+          const grouped = {};
+          const totals = {};
+          (data.data || []).forEach((entry) => {
+            if (!entry?.deviceName) return;
+            grouped[entry.deviceName] = Array.isArray(entry.items)
+              ? entry.items
+              : [];
+            totals[entry.deviceName] = Number.isFinite(entry.total)
+              ? entry.total
+              : grouped[entry.deviceName].length;
+          });
+          setGroupedReports(grouped);
+          setDeviceTotals(totals);
+        }
+      } catch (error) {
+        if (!isMounted) return;
+        console.error(error);
+      } finally {
+        if (isMounted) {
           setLoading(false);
-        })
-        .catch((err) => {
-          if (!isMounted) return;
-          console.error(err);
-          setLoading(false);
-        });
+        }
+      }
     };
 
     // Initial fetch
@@ -73,6 +93,11 @@ export default function ReportsPage() {
           ];
           return updated;
         });
+
+        setDeviceTotals((prev) => ({
+          ...prev,
+          [newReport.deviceName]: (prev[newReport.deviceName] || 0) + 1,
+        }));
       });
     }
 
@@ -97,6 +122,58 @@ export default function ReportsPage() {
       ...prev,
       [reportId]: !prev[reportId],
     }));
+  };
+
+  const loadMoreForDevice = async (deviceName) => {
+    if (deviceLoading[deviceName]) return;
+
+    const currentCount = groupedReports[deviceName]?.length || 0;
+    const total = deviceTotals[deviceName] ?? currentCount;
+
+    setExpandedDevices((prev) => ({
+      ...prev,
+      [deviceName]: true,
+    }));
+
+    if (currentCount >= total) return;
+
+    setDeviceLoading((prev) => ({
+      ...prev,
+      [deviceName]: true,
+    }));
+
+    try {
+      const res = await fetch(
+        `/api/reports?deviceName=${encodeURIComponent(
+          deviceName,
+        )}&skip=${currentCount}&limit=${PAGE_SIZE}&t=${Date.now()}`,
+      );
+      const data = await res.json();
+      if (!data.success) return;
+
+      const incoming = Array.isArray(data.data) ? data.data : [];
+      setGroupedReports((prev) => {
+        const existing = prev[deviceName] || [];
+        return {
+          ...prev,
+          [deviceName]: mergeReportsById(existing, incoming),
+        };
+      });
+
+      if (Number.isFinite(data.total)) {
+        setDeviceTotals((prev) => ({
+          ...prev,
+          [deviceName]: data.total,
+        }));
+      }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setDeviceLoading((prev) => ({
+        ...prev,
+        [deviceName]: false,
+      }));
+    }
   };
 
   if (loading) {
@@ -146,10 +223,12 @@ export default function ReportsPage() {
           <div className="space-y-8">
             {Object.entries(groupedReports).map(([deviceName, reports]) => {
               const isExpanded = expandedDevices[deviceName];
+              const totalForDevice = deviceTotals[deviceName] ?? reports.length;
               const displayedReports = isExpanded
                 ? reports
-                : reports.slice(0, 10);
-              const hasMore = reports.length > 10;
+                : reports.slice(0, PAGE_SIZE);
+              const hasMore = reports.length < totalForDevice;
+              const showActions = reports.length > PAGE_SIZE || hasMore;
 
               return (
                 <div
@@ -243,14 +322,42 @@ export default function ReportsPage() {
                     </table>
                   </div>
 
-                  {hasMore && (
-                    <div className="mt-4 flex justify-center">
-                      <button
-                        onClick={() => toggleDevice(deviceName)}
-                        className="rounded bg-white/10 px-4 py-2 text-sm font-semibold text-emerald-400 transition hover:bg-white/20 hover:text-emerald-300"
-                      >
-                        {isExpanded ? "Show Less" : "Show All"}
-                      </button>
+                  {showActions && (
+                    <div className="mt-4 flex flex-wrap justify-center gap-3">
+                      {!isExpanded && (
+                        <button
+                          onClick={() => loadMoreForDevice(deviceName)}
+                          disabled={deviceLoading[deviceName]}
+                          className="rounded bg-white/10 px-4 py-2 text-sm font-semibold text-emerald-400 transition hover:bg-white/20 hover:text-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {deviceLoading[deviceName]
+                            ? "Loading..."
+                            : hasMore
+                              ? "Show More"
+                              : "Show All"}
+                        </button>
+                      )}
+
+                      {isExpanded && hasMore && (
+                        <button
+                          onClick={() => loadMoreForDevice(deviceName)}
+                          disabled={deviceLoading[deviceName]}
+                          className="rounded bg-white/10 px-4 py-2 text-sm font-semibold text-emerald-400 transition hover:bg-white/20 hover:text-emerald-300 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          {deviceLoading[deviceName]
+                            ? "Loading..."
+                            : "Load 15 More"}
+                        </button>
+                      )}
+
+                      {isExpanded && reports.length > PAGE_SIZE && (
+                        <button
+                          onClick={() => toggleDevice(deviceName)}
+                          className="rounded bg-white/10 px-4 py-2 text-sm font-semibold text-emerald-400 transition hover:bg-white/20 hover:text-emerald-300"
+                        >
+                          Show Less
+                        </button>
+                      )}
                     </div>
                   )}
                 </div>
