@@ -25,6 +25,11 @@ const LANGUAGE_OPTIONS = [
 function normalizeText(text, lang, isClassic = false) {
   let normalized = (text || "").normalize("NFC");
   normalized = normalized.replace(/[\u200B-\u200D\uFEFF]/g, "");
+  normalized = normalized.replace(/[\u00A0\u202F]/g, " ");
+  normalized = normalized.replace(/[\u2018\u2019\u201B\u2032]/g, "'");
+  normalized = normalized.replace(/[\u201C\u201D\u2033]/g, '"');
+  normalized = normalized.replace(/[\u2012\u2013\u2014\u2212]/g, "-");
+  normalized = normalized.replace(/\u2026/g, "...");
   if (isClassic) return normalized;
   // Normalize various danda forms to standard Bengali danda if likely Bengali
   if (lang === "bn" || /[\u0980-\u09FF]/.test(normalized)) {
@@ -55,6 +60,13 @@ function toClassicComparableWord(word) {
     ? cleaned
     : bnAnsiToUnicode(cleaned);
   return normalizeClassicWordKey(unicodeWord);
+}
+
+function toUnicodeDisplayWord(word) {
+  if (!word) return "";
+  const cleaned = normalizeText(word, "bn", true);
+  if (hasBengaliUnicode(cleaned)) return cleaned;
+  return bnAnsiToUnicode(cleaned);
 }
 
 function splitGraphemes(text, locale, isClassic = false) {
@@ -280,6 +292,9 @@ export default function TypingTestClient({
   const pathname = usePathname();
   const hideTargetText =
     pathname?.startsWith("/custom-typing") || pathname?.startsWith("/classic");
+  const hideAccuracyStats =
+    pathname?.startsWith("/custom-typing") || pathname?.startsWith("/classic");
+  const isClassicRoute = pathname?.startsWith("/classic");
   const showTargetText = !hideTargetText;
 
   const isCustomSource = sourceMode === "custom";
@@ -314,6 +329,9 @@ export default function TypingTestClient({
     : isBangla
       ? "[font-family:var(--font-bengali)]"
       : "";
+  const timingWordFontClass = isClassicMode
+    ? "[font-family:var(--font-bengali)]"
+    : typingFontClassName;
   const inputFontClassName = useClassicFont
     ? "font-bijoy-classic placeholder:font-sans text-2xl leading-9 sm:text-3xl sm:leading-10"
     : isBangla
@@ -447,24 +465,37 @@ export default function TypingTestClient({
 
   const progress = useMemo(() => {
     let typedKeystrokes = 0;
+    let typedKeystrokesWithSpaces = 0;
     let correctKeystrokes = 0;
     let correctStrokes = 0;
+    let correctStrokesWithSpaces = 0;
 
     for (let i = 0; i < typedChars.length; i += 1) {
       const typedChar = typedChars[i];
       const isSpace = /\s/u.test(typedChar);
 
+      typedKeystrokesWithSpaces += typedChar.length;
+
       if (!isSpace) {
         typedKeystrokes += typedChar.length;
       }
 
-      if (i < targetChars.length && typedChar === targetChars[i] && !isSpace) {
-        correctKeystrokes += typedChar.length;
-        correctStrokes += typedChar.length;
+      if (i < targetChars.length && typedChar === targetChars[i]) {
+        correctStrokesWithSpaces += typedChar.length;
+        if (!isSpace) {
+          correctKeystrokes += typedChar.length;
+          correctStrokes += typedChar.length;
+        }
       }
     }
 
-    return { typedKeystrokes, correctKeystrokes, correctStrokes };
+    return {
+      typedKeystrokes,
+      typedKeystrokesWithSpaces,
+      correctKeystrokes,
+      correctStrokes,
+      correctStrokesWithSpaces,
+    };
   }, [typedChars, targetChars]);
 
   const liveWordEvaluation = useMemo(() => {
@@ -634,13 +665,44 @@ export default function TypingTestClient({
           ),
         )
       : 100;
-  const strokeWiseCorrectWords = isBangla
-    ? Math.round(effectiveCorrectStrokes / 5)
-    : null;
-  const reportInputMode =
-    isClassicMode && !hasBengaliUnicode(typedText)
-      ? "bijoy-classic"
-      : "unicode";
+  const strokeWiseCorrectWords = Math.round(effectiveCorrectStrokes / 5);
+  const strokeWiseCorrectWordsWithSpaces = Math.round(
+    progress.correctStrokesWithSpaces / 5,
+  );
+  const reportInputMode = isClassicMode ? "bijoy-classic" : "unicode";
+  const totalTypedWords =
+    finalWordEvaluation.correctWords + finalWordEvaluation.incorrectWords;
+  const durationSeconds = isUnlimited ? customElapsedSeconds : totalSeconds;
+  const passAccuracyThreshold = 95;
+  const passMinimumWords = 20;
+  const passMaxSeconds = isCustomSource && isUnlimited ? 60 : null;
+  const passAccuracyMet = accuracy >= passAccuracyThreshold;
+  const passTotalWordsMet =
+    isCustomSource && isUnlimited && isBangla
+      ? (strokeWiseCorrectWords ?? 0) >= passMinimumWords
+      : totalTypedWords >= passMinimumWords;
+  const passStrokeWiseMet =
+    isCustomSource && isUnlimited
+      ? true
+      : isBangla
+        ? (strokeWiseCorrectWords ?? 0) >= passMinimumWords
+        : true;
+  const passTimeMet =
+    passMaxSeconds === null ? true : customElapsedSeconds <= passMaxSeconds;
+  const isPass =
+    passAccuracyMet && passTotalWordsMet && passStrokeWiseMet && passTimeMet;
+  const passTone = isPass ? "text-emerald-200" : "text-rose-200";
+  const passCardTone = isPass
+    ? "border-emerald-300/40 bg-emerald-500/10"
+    : "border-rose-300/40 bg-rose-500/10";
+  const passWordLabel =
+    isCustomSource && isUnlimited && isBangla ? "Stroke-wise" : "Total words";
+  const passWordValue =
+    isCustomSource && isUnlimited && isBangla
+      ? (strokeWiseCorrectWords ?? 0)
+      : totalTypedWords;
+  const showStrokeWiseCriteria = isBangla && !(isCustomSource && isUnlimited);
+  const reportResult = isPass ? "Pass" : "Fail";
 
   const timeLabel = isUnlimited
     ? "Unlimited"
@@ -1031,11 +1093,16 @@ export default function TypingTestClient({
       }
 
       try {
+        const isClassicReport = reportInputMode === "bijoy-classic";
         const timingPayload = wordTimings.map((entry, index) => {
           const minutes = entry.durationMs / 60000;
           const rawWpm = minutes > 0 ? entry.word.length / 5 / minutes : 0;
+          const wordUnicode = isClassicReport
+            ? toUnicodeDisplayWord(entry.word)
+            : undefined;
           return {
             word: entry.word,
+            wordUnicode,
             durationMs: Math.round(entry.durationMs),
             wpm: Math.round(rawWpm),
             strokeCount: entry.word.length,
@@ -1055,15 +1122,22 @@ export default function TypingTestClient({
             language,
             duration: durationMin,
             mode: displayMode,
-            testType: isCustomSource ? "Custom" : "Standard",
+            testType: isClassicRoute
+              ? "Classic"
+              : isCustomSource
+                ? "Custom"
+                : "Standard",
             correctStrokes: effectiveCorrectStrokes,
             correctWords: finalWordEvaluation.correctWords,
             totalWords:
               finalWordEvaluation.correctWords +
               finalWordEvaluation.incorrectWords,
             strokeWiseCorrectWords,
+            strokeWiseCorrectWordsWithSpaces: strokeWiseCorrectWordsWithSpaces,
             wordTimings: timingPayload.length ? timingPayload : undefined,
             inputMode: reportInputMode,
+            durationSeconds,
+            result: reportResult,
             date: new Date(),
           }),
         });
@@ -1085,8 +1159,12 @@ export default function TypingTestClient({
     effectiveCorrectStrokes,
     isCustomSource,
     isClassicMode,
+    isClassicRoute,
     reportInputMode,
+    reportResult,
     strokeWiseCorrectWords,
+    strokeWiseCorrectWordsWithSpaces,
+    durationSeconds,
     wordTimings,
   ]);
 
@@ -1176,21 +1254,29 @@ export default function TypingTestClient({
           </div>
         </header>
 
-        <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-5">
+        <div
+          className={`mb-6 grid grid-cols-2 gap-3 ${
+            hideAccuracyStats ? "lg:grid-cols-2" : "lg:grid-cols-5"
+          }`}
+        >
           <StatCard
             label={isCustomSource ? "Duration" : "Time Left"}
             value={timeLabel}
           />
           <StatCard label="WPM" value={String(wpm)} />
-          <StatCard label="Accuracy" value={`${accuracy}%`} />
-          <StatCard
-            label="Correct Words"
-            value={String(wordStats.correctWords)}
-          />
-          <StatCard
-            label="Incorrect Words"
-            value={String(wordStats.incorrectWords)}
-          />
+          {!hideAccuracyStats ? (
+            <>
+              <StatCard label="Accuracy" value={`${accuracy}%`} />
+              <StatCard
+                label="Correct Words"
+                value={String(wordStats.correctWords)}
+              />
+              <StatCard
+                label="Incorrect Words"
+                value={String(wordStats.incorrectWords)}
+              />
+            </>
+          ) : null}
         </div>
 
         {showTargetText ? (
@@ -1348,11 +1434,67 @@ export default function TypingTestClient({
             </p>
             <h3 className="mt-2 text-3xl font-extrabold">Detailed Report</h3>
 
+            <div className={`mt-4 rounded-2xl border p-4 ${passCardTone}`}>
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.2em] text-slate-200/70">
+                    Result
+                  </p>
+                  <p className={`mt-1 text-2xl font-extrabold ${passTone}`}>
+                    {isPass ? "Pass" : "Fail"}
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-3 text-xs text-slate-200/80">
+                  {!hideAccuracyStats ? (
+                    <span
+                      className={
+                        passAccuracyMet ? "text-emerald-200" : "text-rose-200"
+                      }
+                    >
+                      Accuracy {passAccuracyThreshold}%+ ({accuracy}%)
+                    </span>
+                  ) : null}
+                  <span
+                    className={
+                      passTotalWordsMet ? "text-emerald-200" : "text-rose-200"
+                    }
+                  >
+                    {passWordLabel} {passMinimumWords}+ ({passWordValue})
+                  </span>
+                  {passMaxSeconds !== null ? (
+                    <span
+                      className={
+                        passTimeMet ? "text-emerald-200" : "text-rose-200"
+                      }
+                    >
+                      Time {"<="} {passMaxSeconds}s ({customElapsedSeconds}s)
+                    </span>
+                  ) : null}
+                  {showStrokeWiseCriteria ? (
+                    <span
+                      className={
+                        passStrokeWiseMet ? "text-emerald-200" : "text-rose-200"
+                      }
+                    >
+                      Stroke-wise {passMinimumWords}+ (
+                      {strokeWiseCorrectWords ?? 0})
+                    </span>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+
             <div className="mt-5 space-y-3 rounded-2xl bg-black/20 p-4">
               {isBangla && (
                 <FinishRow
                   label="Stroke Wise Correct Word"
                   value={String(strokeWiseCorrectWords ?? 0)}
+                />
+              )}
+              {isBangla && (
+                <FinishRow
+                  label="Stroke Wise Correct Words (With Spaces)"
+                  value={String(strokeWiseCorrectWordsWithSpaces ?? 0)}
                 />
               )}
               {isUnlimited && (
@@ -1364,20 +1506,21 @@ export default function TypingTestClient({
               <FinishRow label="Final WPM (Per Minute)" value={String(wpm)} />
               <FinishRow
                 label="Total Typed Words"
-                value={String(
-                  finalWordEvaluation.correctWords +
-                    finalWordEvaluation.incorrectWords,
-                )}
+                value={String(totalTypedWords)}
               />
-              <FinishRow label="Final Accuracy" value={`${accuracy}%`} />
-              <FinishRow
-                label="Correct Words"
-                value={String(finalWordEvaluation.correctWords)}
-              />
-              <FinishRow
-                label="Incorrect Words"
-                value={String(finalWordEvaluation.incorrectWords)}
-              />
+              {!hideAccuracyStats ? (
+                <>
+                  <FinishRow label="Final Accuracy" value={`${accuracy}%`} />
+                  <FinishRow
+                    label="Correct Words"
+                    value={String(finalWordEvaluation.correctWords)}
+                  />
+                  <FinishRow
+                    label="Incorrect Words"
+                    value={String(finalWordEvaluation.incorrectWords)}
+                  />
+                </>
+              ) : null}
             </div>
 
             <section className="mt-5 rounded-2xl border border-white/20 bg-black/25 p-4">
@@ -1616,9 +1759,13 @@ export default function TypingTestClient({
                               ] === "incorrect"
                                 ? "text-rose-200"
                                 : "text-amber-200"
-                            }`}
+                            } ${timingWordFontClass}`}
                           >
-                            {wordTimings[hoveredWordIndex]?.word || "-"}
+                            {isClassicMode
+                              ? toUnicodeDisplayWord(
+                                  wordTimings[hoveredWordIndex]?.word,
+                                ) || "-"
+                              : wordTimings[hoveredWordIndex]?.word || "-"}
                           </div>
                           <div className="text-slate-200/70">
                             Index: {hoveredWordIndex + 1}
@@ -1686,7 +1833,11 @@ export default function TypingTestClient({
                       <span>
                         Words under 20 WPM:{" "}
                         {slowEntries.map((entry, index) => {
-                          const label = wordTimings[entry.index]?.word || "-";
+                          const label = isClassicMode
+                            ? toUnicodeDisplayWord(
+                                wordTimings[entry.index]?.word,
+                              ) || "-"
+                            : wordTimings[entry.index]?.word || "-";
                           const time = (
                             (wordTimings[entry.index]?.durationMs || 0) / 1000
                           ).toFixed(2);
@@ -1694,7 +1845,9 @@ export default function TypingTestClient({
                           return (
                             <span key={`slow-${entry.index}`}>
                               {index > 0 ? ", " : ""}
-                              <span className="font-semibold text-rose-500">
+                              <span
+                                className={`font-semibold text-rose-500 ${timingWordFontClass}`}
+                              >
                                 {label}
                               </span>{" "}
                               <span className="font-medium text-amber-300">

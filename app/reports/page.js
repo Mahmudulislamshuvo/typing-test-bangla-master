@@ -4,6 +4,7 @@ import { Fragment, useEffect, useState } from "react";
 import Link from "next/link";
 import PusherClient from "pusher-js";
 import toast, { Toaster } from "react-hot-toast";
+import bnAnsiToUnicode from "bn-ansi-to-unicode";
 
 const PAGE_SIZE = 15;
 
@@ -11,6 +12,17 @@ function mergeReportsById(existing, incoming) {
   const existingIds = new Set(existing.map((report) => report._id));
   const filtered = incoming.filter((report) => !existingIds.has(report._id));
   return [...existing, ...filtered];
+}
+
+function formatDurationSeconds(seconds) {
+  if (!Number.isFinite(seconds)) return "-";
+  const total = Math.max(0, Math.round(seconds));
+  const minutes = Math.floor(total / 60);
+  const remaining = total % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(remaining).padStart(
+    2,
+    "0",
+  )}`;
 }
 
 export default function ReportsPage() {
@@ -245,12 +257,16 @@ export default function ReportsPage() {
                           <th className="px-4 py-3">Date</th>
                           <th className="px-4 py-3">Language</th>
                           <th className="px-4 py-3">Type</th>
+                          <th className="px-4 py-3">Result</th>
                           <th className="px-4 py-3">Mode</th>
                           <th className="px-4 py-3">WPM</th>
                           <th className="px-4 py-3">Accuracy</th>
                           <th className="px-4 py-3">Correct Strokes</th>
                           <th className="px-4 py-3">Words (Corr/Tot)</th>
                           <th className="px-4 py-3">Stroke Wise Words (BN)</th>
+                          <th className="px-4 py-3">
+                            Stroke Wise Words (With Spaces)
+                          </th>
                           <th className="px-4 py-3">Duration</th>
                           <th className="px-4 py-3 text-center">Graph</th>
                         </tr>
@@ -272,6 +288,19 @@ export default function ReportsPage() {
                                 <td className="px-4 py-3 font-semibold text-emerald-200">
                                   {report.testType || "Standard"}
                                 </td>
+                                <td className="px-4 py-3">
+                                  <span
+                                    className={`inline-flex min-w-[72px] justify-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] ${
+                                      report.result === "Pass"
+                                        ? "border-emerald-300/40 bg-emerald-500/15 text-emerald-200"
+                                        : report.result === "Fail"
+                                          ? "border-rose-300/40 bg-rose-500/15 text-rose-200"
+                                          : "border-slate-300/30 bg-white/5 text-slate-300"
+                                    }`}
+                                  >
+                                    {report.result || "-"}
+                                  </span>
+                                </td>
                                 <td className="px-4 py-3 capitalize">
                                   {report.mode}
                                 </td>
@@ -290,10 +319,20 @@ export default function ReportsPage() {
                                     : "-"}
                                 </td>
                                 <td className="px-4 py-3 text-teal-300">
-                                  {report.strokeWiseCorrectWords || "-"}
+                                  {report.strokeWiseCorrectWords ?? "-"}
+                                </td>
+                                <td className="px-4 py-3 text-teal-300">
+                                  {report.strokeWiseCorrectWordsWithSpaces ??
+                                    "-"}
                                 </td>
                                 <td className="px-4 py-3">
-                                  {report.duration} min
+                                  {report.duration === 0
+                                    ? Number.isFinite(report.durationSeconds)
+                                      ? `Unlimited ${formatDurationSeconds(
+                                          report.durationSeconds,
+                                        )}`
+                                      : "Unlimited"
+                                    : `${report.duration} min`}
                                 </td>
                                 <td className="px-4 py-3 text-center">
                                   <button
@@ -308,7 +347,7 @@ export default function ReportsPage() {
                                 <tr className="bg-black/20">
                                   <td
                                     className="px-4 py-4"
-                                    colSpan={11}
+                                    colSpan={13}
                                     style={{ maxWidth: "1px" }}
                                   >
                                     <ReportTimingChart report={report} />
@@ -374,10 +413,15 @@ function containsBengaliChars(text) {
   return /[\u0980-\u09FF]/.test(text || "");
 }
 
+function toUnicodeDisplayWord(word, isClassicReport) {
+  if (!word) return "";
+  if (!isClassicReport) return word;
+  if (containsBengaliChars(word)) return word;
+  return bnAnsiToUnicode(word);
+}
+
 function inferClassicReport(report) {
-  if (report?.inputMode) {
-    return report.inputMode === "bijoy-classic";
-  }
+  if (report?.inputMode === "bijoy-classic") return true;
   if (report?.language !== "bn") return false;
   const timings = Array.isArray(report?.wordTimings) ? report.wordTimings : [];
   const sample = timings.find(
@@ -569,20 +613,50 @@ function ReportTimingChart({ report }) {
                 transform: `translate(${hoveredIndex > points.length * 0.7 ? "-90%" : hoveredIndex < points.length * 0.3 ? "-10%" : "-50%"}, ${points[hoveredIndex].y < 180 ? "15%" : "-110%"})`,
               }}
             >
-              <div className={`font-semibold text-amber-200 ${wordFontClass}`}>
-                {timings[hoveredIndex]?.word || "-"}
-              </div>
+              {(() => {
+                const rawWord = timings[hoveredIndex]?.word || "";
+                const displayWord =
+                  timings[hoveredIndex]?.wordUnicode ||
+                  toUnicodeDisplayWord(rawWord, isClassicReport) ||
+                  "-";
+                const displayFontClass =
+                  timings[hoveredIndex]?.wordUnicode ||
+                  (isClassicReport && rawWord && !containsBengaliChars(rawWord))
+                    ? "[font-family:var(--font-bengali)]"
+                    : wordFontClass;
+                return (
+                  <div
+                    className={`font-semibold text-amber-200 ${displayFontClass}`}
+                  >
+                    {displayWord}
+                  </div>
+                );
+              })()}
               <div className="text-slate-200/70">Index: {hoveredIndex + 1}</div>
               <div
                 className={
                   timings[hoveredIndex]?.status === "incorrect"
-                    ? "text-sm text-rose-200/90"
-                    : "text-sm text-emerald-200/90"
+                    ? "text-sm text-rose-200"
+                    : timings[hoveredIndex]?.status === "correct"
+                      ? "text-sm text-emerald-200"
+                      : "text-sm text-slate-200"
                 }
               >
-                {timings[hoveredIndex]?.status === "incorrect"
-                  ? "Incorrect"
-                  : "Correct"}
+                <span
+                  className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] ${
+                    timings[hoveredIndex]?.status === "incorrect"
+                      ? "border-rose-300/40 bg-rose-500/15 text-rose-200"
+                      : timings[hoveredIndex]?.status === "correct"
+                        ? "border-emerald-300/40 bg-emerald-500/15 text-emerald-200"
+                        : "border-slate-300/30 bg-white/5 text-slate-200"
+                  }`}
+                >
+                  {timings[hoveredIndex]?.status === "incorrect"
+                    ? "Incorrect"
+                    : timings[hoveredIndex]?.status === "correct"
+                      ? "Correct"
+                      : "-"}
+                </span>
               </div>
               <div className="text-cyan-200/90">
                 Time:{" "}
@@ -617,6 +691,9 @@ function ReportTimingChart({ report }) {
                 <th className="px-4 py-3 font-semibold text-slate-300">
                   {isBangla ? "সময় (সেকেন্ড)" : "Time (s)"}
                 </th>
+                <th className="px-4 py-3 font-semibold text-slate-300">
+                  {isBangla ? "স্ট্যাটাস" : "Status"}
+                </th>
                 <th className="px-4 py-3 font-semibold text-slate-300 rounded-tr-lg">
                   WPM
                 </th>
@@ -630,6 +707,28 @@ function ReportTimingChart({ report }) {
                 const highlightClass = isSlowWpm
                   ? "text-rose-400"
                   : "text-emerald-300";
+                const rawWord = entry.word || "";
+                const displayWord =
+                  entry.wordUnicode ||
+                  toUnicodeDisplayWord(rawWord, isClassicReport) ||
+                  "-";
+                const displayFontClass =
+                  entry.wordUnicode ||
+                  (isClassicReport && rawWord && !containsBengaliChars(rawWord))
+                    ? "[font-family:var(--font-bengali)]"
+                    : wordFontClass;
+                const statusLabel =
+                  entry.status === "incorrect"
+                    ? "Incorrect"
+                    : entry.status === "correct"
+                      ? "Correct"
+                      : "-";
+                const statusBadgeClass =
+                  entry.status === "incorrect"
+                    ? "border-rose-300/40 bg-rose-500/15 text-rose-200"
+                    : entry.status === "correct"
+                      ? "border-emerald-300/40 bg-emerald-500/15 text-emerald-200"
+                      : "border-slate-300/30 bg-white/5 text-slate-300";
 
                 return (
                   <tr
@@ -638,12 +737,19 @@ function ReportTimingChart({ report }) {
                   >
                     <td className="px-4 py-2 text-slate-400/80">{idx + 1}</td>
                     <td
-                      className={`px-4 py-2 font-medium ${highlightClass} ${wordFontClass}`}
+                      className={`px-4 py-2 font-medium ${highlightClass} ${displayFontClass}`}
                     >
-                      {entry.word || "-"}
+                      {displayWord}
                     </td>
                     <td className={`px-4 py-2 font-mono ${highlightClass}`}>
                       {timeValue}s
+                    </td>
+                    <td className="px-4 py-2">
+                      <span
+                        className={`inline-flex min-w-[86px] justify-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] ${statusBadgeClass}`}
+                      >
+                        {statusLabel}
+                      </span>
                     </td>
                     <td className={`px-4 py-2 font-mono ${highlightClass}`}>
                       {wpmVal}

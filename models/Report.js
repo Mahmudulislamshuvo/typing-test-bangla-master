@@ -22,6 +22,10 @@ const ReportSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
+  durationSeconds: {
+    type: Number,
+    required: false,
+  },
   mode: {
     type: String,
     required: true,
@@ -29,6 +33,10 @@ const ReportSchema = new mongoose.Schema({
   testType: {
     type: String,
     default: "Standard",
+  },
+  result: {
+    type: String,
+    required: false,
   },
   date: {
     type: Date,
@@ -50,6 +58,10 @@ const ReportSchema = new mongoose.Schema({
     type: Number,
     required: false,
   },
+  strokeWiseCorrectWordsWithSpaces: {
+    type: Number,
+    required: false,
+  },
   inputMode: {
     type: String,
     required: false,
@@ -58,6 +70,7 @@ const ReportSchema = new mongoose.Schema({
     type: [
       {
         word: { type: String },
+        wordUnicode: { type: String },
         durationMs: { type: Number },
         wpm: { type: Number },
         strokeCount: { type: Number },
