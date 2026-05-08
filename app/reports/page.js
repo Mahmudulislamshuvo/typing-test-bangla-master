@@ -251,37 +251,37 @@ export default function ReportsPage() {
                     {deviceName}
                   </h2>
                   <div className="overflow-x-hidden">
-                    <table className="w-full text-left text-[11px] text-slate-300 table-fixed">
-                      <thead className="bg-white/5 text-[10px] uppercase text-slate-400">
+                    <table className="w-full text-left text-xs text-slate-300 table-fixed">
+                      <thead className="bg-white/5 text-[11px] uppercase text-slate-400">
                         <colgroup>
-                          <col style={{width: '11%'}} />
+                          <col style={{width: '12%'}} />
                           <col style={{width: '5%'}} />
+                          <col style={{width: '8%'}} />
                           <col style={{width: '7%'}} />
                           <col style={{width: '7%'}} />
-                          <col style={{width: '7%'}} />
-                          <col style={{width: '5%'}} />
+                          <col style={{width: '4%'}} />
                           <col style={{width: '7%'}} />
                           <col style={{width: '8%'}} />
-                          <col style={{width: '9%'}} />
-                          <col style={{width: '9%'}} />
+                          <col style={{width: '8%'}} />
+                          <col style={{width: '8%'}} />
                           <col style={{width: '10%'}} />
                           <col style={{width: '8%'}} />
-                          <col style={{width: '7%'}} />
+                          <col style={{width: '8%'}} />
                         </colgroup>
                         <tr>
-                          <th className="px-2 py-2">Date</th>
-                          <th className="px-2 py-2">Lang</th>
-                          <th className="px-2 py-2">Type</th>
-                          <th className="px-2 py-2">Result</th>
-                          <th className="px-2 py-2">Mode</th>
-                          <th className="px-2 py-2">WPM</th>
-                          <th className="px-2 py-2">Accuracy</th>
-                          <th className="px-2 py-2">Correct Strokes</th>
-                          <th className="px-2 py-2">Words (C/T)</th>
-                          <th className="px-2 py-2">SW Words (BN)</th>
-                          <th className="px-2 py-2">SW Words (Spaces)</th>
-                          <th className="px-2 py-2">Duration</th>
-                          <th className="px-2 py-2 text-center">Graph</th>
+                          <th className="px-3 py-2">Date</th>
+                          <th className="px-3 py-2">Lang</th>
+                          <th className="px-3 py-2">Type</th>
+                          <th className="px-3 py-2">Result</th>
+                          <th className="px-3 py-2">Mode</th>
+                          <th className="px-3 py-2">WPM</th>
+                          <th className="px-3 py-2">Accuracy</th>
+                          <th className="px-3 py-2">Correct Strokes</th>
+                          <th className="px-3 py-2">Words (C/T)</th>
+                          <th className="px-3 py-2">SW Words (BN)</th>
+                          <th className="px-3 py-2">SW Words (Spaces)</th>
+                          <th className="px-3 py-2">Duration</th>
+                          <th className="px-3 py-2 text-center">Graph</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5">
@@ -292,18 +292,18 @@ export default function ReportsPage() {
                           return (
                             <Fragment key={report._id}>
                               <tr className="hover:bg-white/5">
-                                <td className="px-2 py-2 text-[10px] leading-tight">
+                                <td className="px-3 py-1.5 leading-tight">
                                   {new Date(report.date).toLocaleString()}
                                 </td>
-                                <td className="px-2 py-2 uppercase">
+                                <td className="px-3 py-1.5 uppercase">
                                   {report.language}
                                 </td>
-                                <td className="px-2 py-2 font-semibold text-emerald-200">
+                                <td className="px-3 py-1.5 font-semibold text-emerald-200">
                                   {report.testType || "Standard"}
                                 </td>
-                                <td className="px-2 py-2">
+                                <td className="px-3 py-1.5">
                                   <span
-                                    className={`inline-flex min-w-[48px] justify-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-tight ${
+                                    className={`inline-flex min-w-[52px] justify-center rounded-full border px-2 py-0.5 text-[11px] font-semibold uppercase tracking-tight ${
                                       report.result === "Pass"
                                         ? "border-emerald-300/40 bg-emerald-500/15 text-emerald-200"
                                         : report.result === "Fail"
@@ -314,31 +314,31 @@ export default function ReportsPage() {
                                     {report.result || "-"}
                                   </span>
                                 </td>
-                                <td className="px-2 py-2 capitalize">
+                                <td className="px-3 py-1.5 capitalize">
                                   {report.mode}
                                 </td>
-                                <td className="px-2 py-2 font-bold text-amber-300">
+                                <td className="px-3 py-1.5 font-bold text-amber-300">
                                   {report.wpm}
                                 </td>
-                                <td className="px-2 py-2 text-cyan-300">
+                                <td className="px-3 py-1.5 text-cyan-300">
                                   {report.accuracy}%
                                 </td>
-                                <td className="px-2 py-2 text-emerald-300">
+                                <td className="px-3 py-1.5 text-emerald-300">
                                   {report.correctStrokes || "-"}
                                 </td>
-                                <td className="px-2 py-2">
+                                <td className="px-3 py-1.5">
                                   {report.correctWords !== undefined
                                     ? `${report.correctWords} / ${report.totalWords}`
                                     : "-"}
                                 </td>
-                                <td className="px-2 py-2 text-teal-300">
+                                <td className="px-3 py-1.5 text-teal-300">
                                   {report.strokeWiseCorrectWords ?? "-"}
                                 </td>
-                                <td className="px-2 py-2 text-teal-300">
+                                <td className="px-3 py-1.5 text-teal-300">
                                   {report.strokeWiseCorrectWordsWithSpaces ??
                                     "-"}
                                 </td>
-                                <td className="px-2 py-2">
+                                <td className="px-3 py-1.5">
                                   {report.duration === 0
                                     ? Number.isFinite(report.durationSeconds)
                                       ? `Unlim. ${formatDurationSeconds(
@@ -347,10 +347,10 @@ export default function ReportsPage() {
                                       : "Unlimited"
                                     : `${report.duration} min`}
                                 </td>
-                                <td className="px-2 py-2 text-center">
+                                <td className="px-3 py-1.5 text-center">
                                   <button
                                     onClick={() => toggleGraph(report._id)}
-                                    className="rounded bg-white/10 px-2 py-1 text-[10px] font-semibold text-emerald-400 transition hover:bg-white/20 hover:text-emerald-300"
+                                    className="rounded bg-white/10 px-2 py-1 text-xs font-semibold text-emerald-400 transition hover:bg-white/20 hover:text-emerald-300"
                                   >
                                     {isGraphVisible ? "Hide" : "Show"}
                                   </button>
