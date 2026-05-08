@@ -674,34 +674,18 @@ export default function TypingTestClient({
     finalWordEvaluation.correctWords + finalWordEvaluation.incorrectWords;
   const durationSeconds = isUnlimited ? customElapsedSeconds : totalSeconds;
   const passAccuracyThreshold = 95;
-  const passMinimumWords = 20;
-  const passMaxSeconds = isCustomSource && isUnlimited ? 60 : null;
+  const passWordsPerMinute = 20;
+  // প্রতি মিনিটে ন্যূনতম strokewise শব্দ প্রয়োজন
+  const requiredStrokeWords = isUnlimited
+    ? Math.max(1, Math.ceil((customElapsedSeconds / 60) * passWordsPerMinute))
+    : Math.max(1, Math.ceil(durationMin * passWordsPerMinute));
   const passAccuracyMet = accuracy >= passAccuracyThreshold;
-  const passTotalWordsMet =
-    isCustomSource && isUnlimited && isBangla
-      ? (strokeWiseCorrectWords ?? 0) >= passMinimumWords
-      : totalTypedWords >= passMinimumWords;
-  const passStrokeWiseMet =
-    isCustomSource && isUnlimited
-      ? true
-      : isBangla
-        ? (strokeWiseCorrectWords ?? 0) >= passMinimumWords
-        : true;
-  const passTimeMet =
-    passMaxSeconds === null ? true : customElapsedSeconds <= passMaxSeconds;
-  const isPass =
-    passAccuracyMet && passTotalWordsMet && passStrokeWiseMet && passTimeMet;
+  const passStrokeWiseMet = (strokeWiseCorrectWords ?? 0) >= requiredStrokeWords;
+  const isPass = passAccuracyMet && passStrokeWiseMet;
   const passTone = isPass ? "text-emerald-200" : "text-rose-200";
   const passCardTone = isPass
     ? "border-emerald-300/40 bg-emerald-500/10"
     : "border-rose-300/40 bg-rose-500/10";
-  const passWordLabel =
-    isCustomSource && isUnlimited && isBangla ? "Stroke-wise" : "Total words";
-  const passWordValue =
-    isCustomSource && isUnlimited && isBangla
-      ? (strokeWiseCorrectWords ?? 0)
-      : totalTypedWords;
-  const showStrokeWiseCriteria = isBangla && !(isCustomSource && isUnlimited);
   const reportResult = showPassFail ? (isPass ? "Pass" : "Fail") : undefined;
 
   const timeLabel = isUnlimited
@@ -1455,74 +1439,43 @@ export default function TypingTestClient({
                     </span>
                     <span
                       className={
-                        passTotalWordsMet ? "text-emerald-200" : "text-rose-200"
+                        passStrokeWiseMet ? "text-emerald-200" : "text-rose-200"
                       }
                     >
-                      {passWordLabel} {passMinimumWords}+ ({passWordValue})
+                      Stroke-wise {requiredStrokeWords}+ ({strokeWiseCorrectWords ?? 0})
                     </span>
-                    {passMaxSeconds !== null ? (
-                      <span
-                        className={
-                          passTimeMet ? "text-emerald-200" : "text-rose-200"
-                        }
-                      >
-                        Time {"<="} {passMaxSeconds}s ({customElapsedSeconds}s)
-                      </span>
-                    ) : null}
-                    {showStrokeWiseCriteria ? (
-                      <span
-                        className={
-                          passStrokeWiseMet
-                            ? "text-emerald-200"
-                            : "text-rose-200"
-                        }
-                      >
-                        Stroke-wise {passMinimumWords}+ (
-                        {strokeWiseCorrectWords ?? 0})
-                      </span>
-                    ) : null}
                   </div>
                 </div>
               </div>
             ) : null}
 
             <div className="mt-5 space-y-3 rounded-2xl bg-black/20 p-4">
-              {isBangla && (
-                <FinishRow
-                  label="Stroke Wise Correct Word"
-                  value={String(strokeWiseCorrectWords ?? 0)}
-                />
-              )}
-              {isBangla && (
-                <FinishRow
-                  label="Stroke Wise Correct Words (With Spaces)"
-                  value={String(strokeWiseCorrectWordsWithSpaces ?? 0)}
-                />
-              )}
-              {isUnlimited && (
-                <FinishRow
-                  label="Total Time"
-                  value={formatDuration(customElapsedSeconds)}
-                />
-              )}
+              <FinishRow
+                label="Stroke Wise Correct Word"
+                value={String(strokeWiseCorrectWords ?? 0)}
+              />
+              <FinishRow
+                label="Stroke Wise Correct Words (With Spaces)"
+                value={String(strokeWiseCorrectWordsWithSpaces ?? 0)}
+              />
+              <FinishRow
+                label="Total Time"
+                value={isUnlimited ? formatDuration(customElapsedSeconds) : formatDuration(durationSeconds)}
+              />
               <FinishRow label="Final WPM (Per Minute)" value={String(wpm)} />
               <FinishRow
                 label="Total Typed Words"
                 value={String(totalTypedWords)}
               />
-              {!hideAccuracyStats ? (
-                <>
-                  <FinishRow label="Final Accuracy" value={`${accuracy}%`} />
-                  <FinishRow
-                    label="Correct Words"
-                    value={String(finalWordEvaluation.correctWords)}
-                  />
-                  <FinishRow
-                    label="Incorrect Words"
-                    value={String(finalWordEvaluation.incorrectWords)}
-                  />
-                </>
-              ) : null}
+              <FinishRow label="Final Accuracy" value={`${accuracy}%`} />
+              <FinishRow
+                label="Correct Words"
+                value={String(finalWordEvaluation.correctWords)}
+              />
+              <FinishRow
+                label="Incorrect Words"
+                value={String(finalWordEvaluation.incorrectWords)}
+              />
             </div>
 
             <section className="mt-5 rounded-2xl border border-white/20 bg-black/25 p-4">
