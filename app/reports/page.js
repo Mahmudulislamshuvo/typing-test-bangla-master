@@ -250,24 +250,9 @@ export default function ReportsPage() {
                   <h2 className="mb-4 text-xl font-bold text-emerald-400">
                     {deviceName}
                   </h2>
-                  <div className="overflow-x-hidden">
-                    <table className="w-full text-left text-xs text-slate-300 table-fixed">
+                  <div className="overflow-x-auto">
+                    <table className="min-w-[900px] w-full text-left text-xs text-slate-300">
                       <thead className="bg-white/5 text-[11px] uppercase text-slate-400">
-                        <colgroup>
-                          <col style={{width: '12%'}} />
-                          <col style={{width: '5%'}} />
-                          <col style={{width: '8%'}} />
-                          <col style={{width: '7%'}} />
-                          <col style={{width: '7%'}} />
-                          <col style={{width: '4%'}} />
-                          <col style={{width: '7%'}} />
-                          <col style={{width: '8%'}} />
-                          <col style={{width: '8%'}} />
-                          <col style={{width: '8%'}} />
-                          <col style={{width: '10%'}} />
-                          <col style={{width: '8%'}} />
-                          <col style={{width: '8%'}} />
-                        </colgroup>
                         <tr>
                           <th className="px-3 py-2">Date</th>
                           <th className="px-3 py-2">Lang</th>
