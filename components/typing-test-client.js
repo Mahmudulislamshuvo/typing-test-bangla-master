@@ -10,7 +10,6 @@ import {
 } from "react";
 import { usePathname } from "next/navigation";
 import bnAnsiToUnicode from "bn-ansi-to-unicode";
-import { log } from "firebase/firestore/pipelines";
 
 const DURATION_OPTIONS = [1, 2, 3, 5, 10, 15, 20];
 const DISPLAY_MODES = [
@@ -295,6 +294,7 @@ export default function TypingTestClient({
   const hideAccuracyStats =
     pathname?.startsWith("/custom-typing") || pathname?.startsWith("/classic");
   const isClassicRoute = pathname?.startsWith("/classic");
+  const showPassFail = hideTargetText;
   const showTargetText = !hideTargetText;
 
   const isCustomSource = sourceMode === "custom";
@@ -702,7 +702,7 @@ export default function TypingTestClient({
       ? (strokeWiseCorrectWords ?? 0)
       : totalTypedWords;
   const showStrokeWiseCriteria = isBangla && !(isCustomSource && isUnlimited);
-  const reportResult = isPass ? "Pass" : "Fail";
+  const reportResult = showPassFail ? (isPass ? "Pass" : "Fail") : undefined;
 
   const timeLabel = isUnlimited
     ? "Unlimited"
@@ -1137,7 +1137,7 @@ export default function TypingTestClient({
             wordTimings: timingPayload.length ? timingPayload : undefined,
             inputMode: reportInputMode,
             durationSeconds,
-            result: reportResult,
+            result: showPassFail ? reportResult : undefined,
             date: new Date(),
           }),
         });
@@ -1434,18 +1434,18 @@ export default function TypingTestClient({
             </p>
             <h3 className="mt-2 text-3xl font-extrabold">Detailed Report</h3>
 
-            <div className={`mt-4 rounded-2xl border p-4 ${passCardTone}`}>
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-slate-200/70">
-                    Result
-                  </p>
-                  <p className={`mt-1 text-2xl font-extrabold ${passTone}`}>
-                    {isPass ? "Pass" : "Fail"}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-3 text-xs text-slate-200/80">
-                  {!hideAccuracyStats ? (
+            {showPassFail ? (
+              <div className={`mt-4 rounded-2xl border p-4 ${passCardTone}`}>
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-200/70">
+                      Result
+                    </p>
+                    <p className={`mt-1 text-2xl font-extrabold ${passTone}`}>
+                      {isPass ? "Pass" : "Fail"}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap gap-3 text-xs text-slate-200/80">
                     <span
                       className={
                         passAccuracyMet ? "text-emerald-200" : "text-rose-200"
@@ -1453,36 +1453,38 @@ export default function TypingTestClient({
                     >
                       Accuracy {passAccuracyThreshold}%+ ({accuracy}%)
                     </span>
-                  ) : null}
-                  <span
-                    className={
-                      passTotalWordsMet ? "text-emerald-200" : "text-rose-200"
-                    }
-                  >
-                    {passWordLabel} {passMinimumWords}+ ({passWordValue})
-                  </span>
-                  {passMaxSeconds !== null ? (
                     <span
                       className={
-                        passTimeMet ? "text-emerald-200" : "text-rose-200"
+                        passTotalWordsMet ? "text-emerald-200" : "text-rose-200"
                       }
                     >
-                      Time {"<="} {passMaxSeconds}s ({customElapsedSeconds}s)
+                      {passWordLabel} {passMinimumWords}+ ({passWordValue})
                     </span>
-                  ) : null}
-                  {showStrokeWiseCriteria ? (
-                    <span
-                      className={
-                        passStrokeWiseMet ? "text-emerald-200" : "text-rose-200"
-                      }
-                    >
-                      Stroke-wise {passMinimumWords}+ (
-                      {strokeWiseCorrectWords ?? 0})
-                    </span>
-                  ) : null}
+                    {passMaxSeconds !== null ? (
+                      <span
+                        className={
+                          passTimeMet ? "text-emerald-200" : "text-rose-200"
+                        }
+                      >
+                        Time {"<="} {passMaxSeconds}s ({customElapsedSeconds}s)
+                      </span>
+                    ) : null}
+                    {showStrokeWiseCriteria ? (
+                      <span
+                        className={
+                          passStrokeWiseMet
+                            ? "text-emerald-200"
+                            : "text-rose-200"
+                        }
+                      >
+                        Stroke-wise {passMinimumWords}+ (
+                        {strokeWiseCorrectWords ?? 0})
+                      </span>
+                    ) : null}
+                  </div>
                 </div>
               </div>
-            </div>
+            ) : null}
 
             <div className="mt-5 space-y-3 rounded-2xl bg-black/20 p-4">
               {isBangla && (

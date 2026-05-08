@@ -197,9 +197,9 @@ export default function ReportsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 p-6 text-slate-200">
+    <main className="min-h-screen bg-slate-950 p-4 text-slate-200">
       <Toaster />
-      <div className="mx-auto max-w-6xl">
+      <div className="w-full max-w-[1600px] mx-auto">
         <header className="mb-8 flex items-center justify-between">
           <h1 className="text-3xl font-bold text-white">Typing Reports</h1>
           <div className="flex items-center gap-3">
@@ -250,25 +250,38 @@ export default function ReportsPage() {
                   <h2 className="mb-4 text-xl font-bold text-emerald-400">
                     {deviceName}
                   </h2>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm text-slate-300">
-                      <thead className="bg-white/5 text-xs uppercase text-slate-400">
+                  <div className="overflow-x-hidden">
+                    <table className="w-full text-left text-[11px] text-slate-300 table-fixed">
+                      <thead className="bg-white/5 text-[10px] uppercase text-slate-400">
+                        <colgroup>
+                          <col style={{width: '11%'}} />
+                          <col style={{width: '5%'}} />
+                          <col style={{width: '7%'}} />
+                          <col style={{width: '7%'}} />
+                          <col style={{width: '7%'}} />
+                          <col style={{width: '5%'}} />
+                          <col style={{width: '7%'}} />
+                          <col style={{width: '8%'}} />
+                          <col style={{width: '9%'}} />
+                          <col style={{width: '9%'}} />
+                          <col style={{width: '10%'}} />
+                          <col style={{width: '8%'}} />
+                          <col style={{width: '7%'}} />
+                        </colgroup>
                         <tr>
-                          <th className="px-4 py-3">Date</th>
-                          <th className="px-4 py-3">Language</th>
-                          <th className="px-4 py-3">Type</th>
-                          <th className="px-4 py-3">Result</th>
-                          <th className="px-4 py-3">Mode</th>
-                          <th className="px-4 py-3">WPM</th>
-                          <th className="px-4 py-3">Accuracy</th>
-                          <th className="px-4 py-3">Correct Strokes</th>
-                          <th className="px-4 py-3">Words (Corr/Tot)</th>
-                          <th className="px-4 py-3">Stroke Wise Words (BN)</th>
-                          <th className="px-4 py-3">
-                            Stroke Wise Words (With Spaces)
-                          </th>
-                          <th className="px-4 py-3">Duration</th>
-                          <th className="px-4 py-3 text-center">Graph</th>
+                          <th className="px-2 py-2">Date</th>
+                          <th className="px-2 py-2">Lang</th>
+                          <th className="px-2 py-2">Type</th>
+                          <th className="px-2 py-2">Result</th>
+                          <th className="px-2 py-2">Mode</th>
+                          <th className="px-2 py-2">WPM</th>
+                          <th className="px-2 py-2">Accuracy</th>
+                          <th className="px-2 py-2">Correct Strokes</th>
+                          <th className="px-2 py-2">Words (C/T)</th>
+                          <th className="px-2 py-2">SW Words (BN)</th>
+                          <th className="px-2 py-2">SW Words (Spaces)</th>
+                          <th className="px-2 py-2">Duration</th>
+                          <th className="px-2 py-2 text-center">Graph</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5">
@@ -279,18 +292,18 @@ export default function ReportsPage() {
                           return (
                             <Fragment key={report._id}>
                               <tr className="hover:bg-white/5">
-                                <td className="px-4 py-3">
+                                <td className="px-2 py-2 text-[10px] leading-tight">
                                   {new Date(report.date).toLocaleString()}
                                 </td>
-                                <td className="px-4 py-3 uppercase">
+                                <td className="px-2 py-2 uppercase">
                                   {report.language}
                                 </td>
-                                <td className="px-4 py-3 font-semibold text-emerald-200">
+                                <td className="px-2 py-2 font-semibold text-emerald-200">
                                   {report.testType || "Standard"}
                                 </td>
-                                <td className="px-4 py-3">
+                                <td className="px-2 py-2">
                                   <span
-                                    className={`inline-flex min-w-[72px] justify-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] ${
+                                    className={`inline-flex min-w-[48px] justify-center rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-tight ${
                                       report.result === "Pass"
                                         ? "border-emerald-300/40 bg-emerald-500/15 text-emerald-200"
                                         : report.result === "Fail"
@@ -301,43 +314,43 @@ export default function ReportsPage() {
                                     {report.result || "-"}
                                   </span>
                                 </td>
-                                <td className="px-4 py-3 capitalize">
+                                <td className="px-2 py-2 capitalize">
                                   {report.mode}
                                 </td>
-                                <td className="px-4 py-3 font-bold text-amber-300">
+                                <td className="px-2 py-2 font-bold text-amber-300">
                                   {report.wpm}
                                 </td>
-                                <td className="px-4 py-3 text-cyan-300">
+                                <td className="px-2 py-2 text-cyan-300">
                                   {report.accuracy}%
                                 </td>
-                                <td className="px-4 py-3 text-emerald-300">
+                                <td className="px-2 py-2 text-emerald-300">
                                   {report.correctStrokes || "-"}
                                 </td>
-                                <td className="px-4 py-3">
+                                <td className="px-2 py-2">
                                   {report.correctWords !== undefined
                                     ? `${report.correctWords} / ${report.totalWords}`
                                     : "-"}
                                 </td>
-                                <td className="px-4 py-3 text-teal-300">
+                                <td className="px-2 py-2 text-teal-300">
                                   {report.strokeWiseCorrectWords ?? "-"}
                                 </td>
-                                <td className="px-4 py-3 text-teal-300">
+                                <td className="px-2 py-2 text-teal-300">
                                   {report.strokeWiseCorrectWordsWithSpaces ??
                                     "-"}
                                 </td>
-                                <td className="px-4 py-3">
+                                <td className="px-2 py-2">
                                   {report.duration === 0
                                     ? Number.isFinite(report.durationSeconds)
-                                      ? `Unlimited ${formatDurationSeconds(
+                                      ? `Unlim. ${formatDurationSeconds(
                                           report.durationSeconds,
                                         )}`
                                       : "Unlimited"
                                     : `${report.duration} min`}
                                 </td>
-                                <td className="px-4 py-3 text-center">
+                                <td className="px-2 py-2 text-center">
                                   <button
                                     onClick={() => toggleGraph(report._id)}
-                                    className="rounded bg-white/10 px-3 py-1.5 text-xs font-semibold text-emerald-400 transition hover:bg-white/20 hover:text-emerald-300"
+                                    className="rounded bg-white/10 px-2 py-1 text-[10px] font-semibold text-emerald-400 transition hover:bg-white/20 hover:text-emerald-300"
                                   >
                                     {isGraphVisible ? "Hide" : "Show"}
                                   </button>

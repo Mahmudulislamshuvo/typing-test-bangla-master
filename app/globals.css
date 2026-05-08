@@ -32,3 +32,12 @@ body {
     "SutonnyMJ", "SutonnyMJ Regular", var(--font-bengali), "Segoe UI",
     sans-serif;
 }
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
