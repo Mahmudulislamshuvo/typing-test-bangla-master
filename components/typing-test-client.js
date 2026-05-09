@@ -1118,6 +1118,8 @@ export default function TypingTestClient({
               finalWordEvaluation.incorrectWords,
             strokeWiseCorrectWords,
             strokeWiseCorrectWordsWithSpaces: strokeWiseCorrectWordsWithSpaces,
+            strokeWiseCorrectCharacters: effectiveCorrectStrokes,
+            strokeWiseCorrectCharactersWithSpaces: progress.correctStrokesWithSpaces,
             wordTimings: timingPayload.length ? timingPayload : undefined,
             inputMode: reportInputMode,
             durationSeconds,
@@ -1457,6 +1459,14 @@ export default function TypingTestClient({
               <FinishRow
                 label="Stroke Wise Correct Words (With Spaces)"
                 value={String(strokeWiseCorrectWordsWithSpaces ?? 0)}
+              />
+              <FinishRow
+                label="Stroke Wise Correct Character"
+                value={String(effectiveCorrectStrokes ?? 0)}
+              />
+              <FinishRow
+                label="Stroke Wise Correct Character (With Spaces)"
+                value={String(progress.correctStrokesWithSpaces ?? 0)}
               />
               <FinishRow
                 label="Total Time"

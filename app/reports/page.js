@@ -263,8 +263,8 @@ export default function ReportsPage() {
                           <th className="px-3 py-2">Accuracy</th>
                           <th className="px-3 py-2">Correct Strokes</th>
                           <th className="px-3 py-2">Words (C/T)</th>
-                          <th className="px-3 py-2">SW Words (BN)</th>
-                          <th className="px-3 py-2">SW Words (Spaces)</th>
+                          <th className="px-3 py-2">SW Char (BN)</th>
+                          <th className="px-3 py-2">SW Char (Spaces)</th>
                           <th className="px-3 py-2">Duration</th>
                           <th className="px-3 py-2 text-center">Graph</th>
                         </tr>
@@ -317,10 +317,11 @@ export default function ReportsPage() {
                                     : "-"}
                                 </td>
                                 <td className="px-3 py-1.5 text-teal-300">
-                                  {report.strokeWiseCorrectWords ?? "-"}
+                                  {report.strokeWiseCorrectCharacters ?? report.strokeWiseCorrectWords ?? "-"}
                                 </td>
                                 <td className="px-3 py-1.5 text-teal-300">
-                                  {report.strokeWiseCorrectWordsWithSpaces ??
+                                  {report.strokeWiseCorrectCharactersWithSpaces ??
+                                    report.strokeWiseCorrectWordsWithSpaces ??
                                     "-"}
                                 </td>
                                 <td className="px-3 py-1.5">
