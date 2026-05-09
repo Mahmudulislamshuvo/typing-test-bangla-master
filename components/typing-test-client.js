@@ -667,8 +667,11 @@ export default function TypingTestClient({
         )
       : 100;
   const strokeWiseCorrectWords = Math.round(effectiveCorrectStrokes / 5);
+  // স্পেস সহ correct chars = correct শব্দের chars + প্রতিটা correct শব্দের জন্য ১টা স্পেস
+  const correctStrokesWithSpaces =
+    effectiveCorrectStrokes + finalWordEvaluation.correctWords;
   const strokeWiseCorrectWordsWithSpaces = Math.round(
-    progress.correctStrokesWithSpaces / 5,
+    correctStrokesWithSpaces / 5,
   );
   const reportInputMode = isClassicMode ? "bijoy-classic" : "unicode";
   const totalTypedWords =
@@ -1486,7 +1489,7 @@ export default function TypingTestClient({
               />
               <FinishRow
                 label="Stroke Wise Correct Character (With Spaces)"
-                value={String(progress.correctStrokesWithSpaces ?? 0)}
+                value={String(correctStrokesWithSpaces ?? 0)}
                 variant="chars"
               />
               <div className="my-1 border-t border-white/10" />
