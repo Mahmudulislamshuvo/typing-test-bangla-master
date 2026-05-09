@@ -260,11 +260,11 @@ export default function ReportsPage() {
                           <th className="px-3 py-2">Result</th>
                           <th className="px-3 py-2">Mode</th>
                           <th className="px-3 py-2">WPM</th>
-                          <th className="px-3 py-2">Accuracy</th>
-                          <th className="px-3 py-2">Correct Strokes</th>
+                          <th className="px-3 py-2">Acc.</th>
+                          <th className="px-3 py-2">Cor. Strokes</th>
                           <th className="px-3 py-2">Words (C/T)</th>
-                          <th className="px-3 py-2">SW Char (BN)</th>
-                          <th className="px-3 py-2">SW Char (Spaces)</th>
+                          <th className="px-3 py-2">SW Char</th>
+                          <th className="px-3 py-2">SW Char<br/>(+Spaces)</th>
                           <th className="px-3 py-2">Duration</th>
                           <th className="px-3 py-2 text-center">Graph</th>
                         </tr>
@@ -277,8 +277,9 @@ export default function ReportsPage() {
                           return (
                             <Fragment key={report._id}>
                               <tr className="hover:bg-white/5">
-                                <td className="px-3 py-1.5 leading-tight">
-                                  {new Date(report.date).toLocaleString()}
+                                <td className="px-3 py-1.5 leading-tight whitespace-nowrap">
+                                  {new Date(report.date).toLocaleDateString()}<br/>
+                                  <span className="text-slate-400">{new Date(report.date).toLocaleTimeString()}</span>
                                 </td>
                                 <td className="px-3 py-1.5 uppercase">
                                   {report.language}
@@ -320,9 +321,10 @@ export default function ReportsPage() {
                                   {report.strokeWiseCorrectCharacters ?? report.strokeWiseCorrectWords ?? "-"}
                                 </td>
                                 <td className="px-3 py-1.5 text-teal-300">
-                                  {report.strokeWiseCorrectCharactersWithSpaces ??
-                                    report.strokeWiseCorrectWordsWithSpaces ??
-                                    "-"}
+                                  {report.strokeWiseCorrectWordsWithSpaces ??
+                                    (report.strokeWiseCorrectCharactersWithSpaces != null
+                                      ? Math.round(report.strokeWiseCorrectCharactersWithSpaces / 5)
+                                      : "-")}
                                 </td>
                                 <td className="px-3 py-1.5">
                                   {report.duration === 0
