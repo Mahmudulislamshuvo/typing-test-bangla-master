@@ -1121,7 +1121,6 @@ export default function TypingTestClient({
             strokeWiseCorrectWords,
             strokeWiseCorrectWordsWithSpaces: strokeWiseCorrectWordsWithSpaces,
             strokeWiseCorrectCharacters: effectiveCorrectStrokes,
-            strokeWiseCorrectCharactersWithSpaces: progress.correctStrokesWithSpaces,
             wordTimings: timingPayload.length ? timingPayload : undefined,
             inputMode: reportInputMode,
             durationSeconds,

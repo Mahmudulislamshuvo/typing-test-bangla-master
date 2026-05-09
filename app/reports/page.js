@@ -321,10 +321,7 @@ export default function ReportsPage() {
                                   {report.strokeWiseCorrectCharacters ?? report.strokeWiseCorrectWords ?? "-"}
                                 </td>
                                 <td className="px-3 py-1.5 text-teal-300">
-                                  {report.strokeWiseCorrectWordsWithSpaces ??
-                                    (report.strokeWiseCorrectCharactersWithSpaces != null
-                                      ? Math.round(report.strokeWiseCorrectCharactersWithSpaces / 5)
-                                      : "-")}
+                                  {report.strokeWiseCorrectWordsWithSpaces ?? "-"}
                                 </td>
                                 <td className="px-3 py-1.5">
                                   {report.duration === 0
