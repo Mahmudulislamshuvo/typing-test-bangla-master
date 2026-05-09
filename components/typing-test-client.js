@@ -1415,10 +1415,27 @@ export default function TypingTestClient({
       {isFinished && (
         <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/65 p-4 backdrop-blur-sm">
           <div className="w-full max-w-3xl max-h-[95vh] overflow-y-auto rounded-3xl border border-white/25 bg-[linear-gradient(145deg,#082f2d,#134e4a)] p-6 pr-4 text-white shadow-[0_18px_60px_rgba(0,0,0,0.45)] sm:p-8 sm:pr-6">
-            <p className="text-xs uppercase tracking-[0.2em] text-amber-200/80">
-              Session Complete
-            </p>
-            <h3 className="mt-2 text-3xl font-extrabold">Detailed Report</h3>
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-amber-200/80">
+                  Session Complete
+                </p>
+                <h3 className="mt-2 text-3xl font-extrabold">Detailed Report</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsFinished(false);
+                  setIsRunning(false);
+                }}
+                aria-label="Close report"
+                className="mt-1 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10 text-slate-300 transition hover:bg-white/20 hover:text-white"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+                  <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
+                </svg>
+              </button>
+            </div>
 
             {showPassFail ? (
               <div className={`mt-4 rounded-2xl border p-4 ${passCardTone}`}>
@@ -1451,23 +1468,29 @@ export default function TypingTestClient({
               </div>
             ) : null}
 
-            <div className="mt-5 space-y-3 rounded-2xl bg-black/20 p-4">
+            <div className="mt-5 space-y-2 rounded-2xl bg-black/20 p-4">
               <FinishRow
                 label="Stroke Wise Correct Word"
                 value={String(strokeWiseCorrectWords ?? 0)}
+                variant="words"
               />
               <FinishRow
                 label="Stroke Wise Correct Words (With Spaces)"
                 value={String(strokeWiseCorrectWordsWithSpaces ?? 0)}
+                variant="words"
               />
+              <div className="my-1 border-t border-white/10" />
               <FinishRow
                 label="Stroke Wise Correct Character"
                 value={String(effectiveCorrectStrokes ?? 0)}
+                variant="chars"
               />
               <FinishRow
                 label="Stroke Wise Correct Character (With Spaces)"
                 value={String(progress.correctStrokesWithSpaces ?? 0)}
+                variant="chars"
               />
+              <div className="my-1 border-t border-white/10" />
               <FinishRow
                 label="Total Time"
                 value={isUnlimited ? formatDuration(customElapsedSeconds) : formatDuration(durationSeconds)}
@@ -1477,7 +1500,8 @@ export default function TypingTestClient({
                 label="Total Typed Words"
                 value={String(totalTypedWords)}
               />
-              <FinishRow label="Final Accuracy" value={`${accuracy}%`} />
+              <div className="my-1 border-t border-white/10" />
+              <FinishRow label="Final Accuracy" value={`${accuracy}%`} variant="accuracy" />
               <FinishRow
                 label="Correct Words"
                 value={String(finalWordEvaluation.correctWords)}
@@ -1910,11 +1934,34 @@ function formatDuration(totalSeconds) {
   )}`;
 }
 
-function FinishRow({ label, value }) {
+function FinishRow({ label, value, variant }) {
+  const styles = {
+    words: {
+      row: "rounded-xl bg-amber-500/10 px-3 py-2 border border-amber-400/20",
+      label: "text-sm font-medium text-amber-100/80",
+      value: "text-xl font-extrabold text-amber-300",
+    },
+    chars: {
+      row: "rounded-xl bg-violet-500/10 px-3 py-2 border border-violet-400/20",
+      label: "text-sm font-medium text-violet-100/80",
+      value: "text-xl font-extrabold text-violet-300",
+    },
+    accuracy: {
+      row: "rounded-xl bg-cyan-500/10 px-3 py-2 border border-cyan-400/20",
+      label: "text-sm font-medium text-cyan-100/80",
+      value: "text-xl font-extrabold text-cyan-300",
+    },
+    default: {
+      row: "px-1 py-1.5",
+      label: "text-sm text-emerald-50/80",
+      value: "text-xl font-extrabold text-amber-200",
+    },
+  };
+  const s = styles[variant] || styles.default;
   return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="text-sm text-emerald-50/80">{label}</span>
-      <span className="text-xl font-extrabold text-amber-200">{value}</span>
+    <div className={`flex items-center justify-between gap-3 ${s.row}`}>
+      <span className={s.label}>{label}</span>
+      <span className={s.value}>{value}</span>
     </div>
   );
 }
