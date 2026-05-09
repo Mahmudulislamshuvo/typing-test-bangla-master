@@ -309,6 +309,7 @@ export default function TypingTestClient({
   const [timeLeft, setTimeLeft] = useState(initialDuration * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
+  const [reportDismissed, setReportDismissed] = useState(false);
   const [customElapsedSeconds, setCustomElapsedSeconds] = useState(0);
   const [isLoadingSource, setIsLoadingSource] = useState(
     !initialWords?.length && !isCustomSource,
@@ -856,6 +857,7 @@ export default function TypingTestClient({
       lastTypingTimeRef.current = null;
       setIsRunning(false);
       setIsFinished(false);
+      setReportDismissed(false);
       setTimeLeft(minutes * 60);
       setCustomElapsedSeconds(0);
 
@@ -1402,6 +1404,7 @@ export default function TypingTestClient({
 
                 setIsRunning(false);
                 setIsFinished(false);
+                setReportDismissed(false);
                 setTimeLeft(totalSeconds);
               }}
               className="rounded-xl border border-emerald-100/40 bg-white/10 px-5 py-2.5 text-sm font-semibold text-emerald-50 transition hover:bg-white/20"
@@ -1412,7 +1415,7 @@ export default function TypingTestClient({
         </section>
       </section>
 
-      {isFinished && (
+      {isFinished && !reportDismissed && (
         <div className="fixed inset-0 z-30 flex items-center justify-center bg-slate-950/65 p-4 backdrop-blur-sm">
           <div className="w-full max-w-3xl max-h-[95vh] overflow-y-auto rounded-3xl border border-white/25 bg-[linear-gradient(145deg,#082f2d,#134e4a)] p-6 pr-4 text-white shadow-[0_18px_60px_rgba(0,0,0,0.45)] sm:p-8 sm:pr-6">
             <div className="flex items-start justify-between gap-4">
@@ -1424,10 +1427,7 @@ export default function TypingTestClient({
               </div>
               <button
                 type="button"
-                onClick={() => {
-                  setIsFinished(false);
-                  setIsRunning(false);
-                }}
+                onClick={() => setReportDismissed(true)}
                 aria-label="Close report"
                 className="mt-1 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10 text-slate-300 transition hover:bg-white/20 hover:text-white"
               >
