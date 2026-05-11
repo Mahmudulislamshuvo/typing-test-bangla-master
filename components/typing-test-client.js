@@ -212,6 +212,12 @@ function alignStrictWords(typedWords, targetWords) {
   return wordStatuses;
 }
 
+function compareWordsPositional(typedWords, targetWords) {
+  return typedWords.map((word, index) =>
+    word === targetWords[index] ? "correct" : "incorrect",
+  );
+}
+
 function buildWordReport(typedText, wordStatuses) {
   const typedTokens = typedText.match(/\s+|[^\s]+/gu) || [];
   let wordIndex = 0;
@@ -540,7 +546,9 @@ export default function TypingTestClient({
     const comparisonTypedWords = isClassicMode
       ? liveClassicComparableWords
       : liveTypedWords;
-    const wordStatuses = alignStrictWords(comparisonTypedWords, targetSlice);
+    const wordStatuses = isCustomSource
+      ? compareWordsPositional(comparisonTypedWords, targetSlice)
+      : alignStrictWords(comparisonTypedWords, targetSlice);
     const correctWords = wordStatuses.filter(
       (status) => status === "correct",
     ).length;
@@ -555,6 +563,7 @@ export default function TypingTestClient({
   }, [
     comparisonTargetWords,
     isClassicMode,
+    isCustomSource,
     liveClassicComparableWords,
     liveTypedWords,
   ]);
@@ -568,7 +577,9 @@ export default function TypingTestClient({
     const comparisonTypedWords = isClassicMode
       ? finalClassicComparableWords
       : finalTypedWords;
-    const wordStatuses = alignStrictWords(comparisonTypedWords, targetSlice);
+    const wordStatuses = isCustomSource
+      ? compareWordsPositional(comparisonTypedWords, targetSlice)
+      : alignStrictWords(comparisonTypedWords, targetSlice);
     const correctWords = wordStatuses.filter(
       (status) => status === "correct",
     ).length;
@@ -586,6 +597,7 @@ export default function TypingTestClient({
     finalClassicComparableWords,
     finalTypedWords,
     isClassicMode,
+    isCustomSource,
   ]);
 
   const wordStats = isFinished ? finalWordEvaluation : liveWordEvaluation;
