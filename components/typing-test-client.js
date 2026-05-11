@@ -68,6 +68,28 @@ function toUnicodeDisplayWord(word) {
   return bnAnsiToUnicode(cleaned);
 }
 
+function splitClassicComparableWords(text, includeTrailingPartial = false) {
+  const cleaned = normalizeText(text, "bn", true);
+  const unicodeText = hasBengaliUnicode(cleaned)
+    ? cleaned
+    : bnAnsiToUnicode(cleaned);
+  const normalized = normalizeText(unicodeText, "bn", false).replace(
+    /\n/g,
+    " ",
+  );
+
+  if (!normalized.trim()) return [];
+
+  const words = (normalized.match(/\S+/gu) || []).slice();
+  const hasTrailingWhitespace = /\s$/u.test(normalized);
+
+  if (!includeTrailingPartial && !hasTrailingWhitespace && words.length > 0) {
+    words.pop();
+  }
+
+  return words.map(normalizeClassicWordKey);
+}
+
 function splitGraphemes(text, locale, isClassic = false) {
   const cleanText = normalizeText(text, locale, isClassic);
   if (typeof Intl !== "undefined" && Intl.Segmenter) {
@@ -455,6 +477,16 @@ export default function TypingTestClient({
     [isClassicMode, locale, typedText],
   );
 
+  const liveClassicComparableWords = useMemo(() => {
+    if (!isClassicMode) return [];
+    return splitClassicComparableWords(typedText, false);
+  }, [isClassicMode, typedText]);
+
+  const finalClassicComparableWords = useMemo(() => {
+    if (!isClassicMode) return [];
+    return splitClassicComparableWords(typedText, true);
+  }, [isClassicMode, typedText]);
+
   const comparisonTargetWords = useMemo(() => {
     if (!isClassicMode) return targetWords;
     return targetWords.map(toClassicComparableWord);
@@ -506,7 +538,7 @@ export default function TypingTestClient({
       false,
     );
     const comparisonTypedWords = isClassicMode
-      ? liveTypedWords.map(toClassicComparableWord)
+      ? liveClassicComparableWords
       : liveTypedWords;
     const wordStatuses = alignStrictWords(comparisonTypedWords, targetSlice);
     const correctWords = wordStatuses.filter(
@@ -520,7 +552,12 @@ export default function TypingTestClient({
       return acc;
     }, 0);
     return { correctWords, incorrectWords, wordStatuses, correctStrokes };
-  }, [comparisonTargetWords, isClassicMode, liveTypedWords]);
+  }, [
+    comparisonTargetWords,
+    isClassicMode,
+    liveClassicComparableWords,
+    liveTypedWords,
+  ]);
 
   const finalWordEvaluation = useMemo(() => {
     const targetSlice = getTargetSlice(
@@ -529,7 +566,7 @@ export default function TypingTestClient({
       true,
     );
     const comparisonTypedWords = isClassicMode
-      ? finalTypedWords.map(toClassicComparableWord)
+      ? finalClassicComparableWords
       : finalTypedWords;
     const wordStatuses = alignStrictWords(comparisonTypedWords, targetSlice);
     const correctWords = wordStatuses.filter(
@@ -544,7 +581,12 @@ export default function TypingTestClient({
     }, 0);
 
     return { correctWords, incorrectWords, wordStatuses, correctStrokes };
-  }, [comparisonTargetWords, finalTypedWords, isClassicMode]);
+  }, [
+    comparisonTargetWords,
+    finalClassicComparableWords,
+    finalTypedWords,
+    isClassicMode,
+  ]);
 
   const wordStats = isFinished ? finalWordEvaluation : liveWordEvaluation;
   const effectiveCorrectStrokes = isClassicMode
