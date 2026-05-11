@@ -684,7 +684,8 @@ export default function TypingTestClient({
     ? Math.max(1, Math.ceil((customElapsedSeconds / 60) * passWordsPerMinute))
     : Math.max(1, Math.ceil(durationMin * passWordsPerMinute));
   const passAccuracyMet = accuracy >= passAccuracyThreshold;
-  const passStrokeWiseMet = (strokeWiseCorrectWords ?? 0) >= requiredStrokeWords;
+  const passStrokeWiseMet =
+    (strokeWiseCorrectWords ?? 0) >= requiredStrokeWords;
   const isPass = passAccuracyMet && passStrokeWiseMet;
   const passTone = isPass ? "text-emerald-200" : "text-rose-200";
   const passCardTone = isPass
@@ -1083,18 +1084,33 @@ export default function TypingTestClient({
 
       try {
         const isClassicReport = reportInputMode === "bijoy-classic";
-        const timingPayload = wordTimings.map((entry, index) => {
-          const minutes = entry.durationMs / 60000;
-          const rawWpm = minutes > 0 ? entry.word.length / 5 / minutes : 0;
+        const finalWordsForReport = Array.isArray(finalTypedWords)
+          ? finalTypedWords
+          : [];
+        const firstTimingIndex = wordTimings.findIndex(
+          (entry) => typeof entry?.word === "string" && entry.word.trim(),
+        );
+        const timingOffset =
+          firstTimingIndex > 0 &&
+          wordTimings[firstTimingIndex]?.word === finalWordsForReport[0]
+            ? firstTimingIndex
+            : 0;
+        const timingPayload = finalWordsForReport.map((word, index) => {
+          const entry = wordTimings[index + timingOffset] || {};
+          const durationMs = Number.isFinite(entry.durationMs)
+            ? entry.durationMs
+            : 0;
+          const minutes = durationMs / 60000;
+          const rawWpm = minutes > 0 ? word.length / 5 / minutes : 0;
           const wordUnicode = isClassicReport
-            ? toUnicodeDisplayWord(entry.word)
+            ? toUnicodeDisplayWord(word)
             : undefined;
           return {
-            word: entry.word,
+            word,
             wordUnicode,
-            durationMs: Math.round(entry.durationMs),
+            durationMs: Math.round(durationMs),
             wpm: Math.round(rawWpm),
-            strokeCount: entry.word.length,
+            strokeCount: word.length,
             status: finalWordEvaluation.wordStatuses[index] || "incorrect",
           };
         });
@@ -1155,6 +1171,7 @@ export default function TypingTestClient({
     strokeWiseCorrectWords,
     strokeWiseCorrectWordsWithSpaces,
     durationSeconds,
+    finalTypedWords,
     wordTimings,
   ]);
 
@@ -1425,7 +1442,9 @@ export default function TypingTestClient({
                 <p className="text-xs uppercase tracking-[0.2em] text-amber-200/80">
                   Session Complete
                 </p>
-                <h3 className="mt-2 text-3xl font-extrabold">Detailed Report</h3>
+                <h3 className="mt-2 text-3xl font-extrabold">
+                  Detailed Report
+                </h3>
               </div>
               <button
                 type="button"
@@ -1433,7 +1452,12 @@ export default function TypingTestClient({
                 aria-label="Close report"
                 className="mt-1 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full border border-white/20 bg-white/10 text-slate-300 transition hover:bg-white/20 hover:text-white"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-5 w-5">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="h-5 w-5"
+                >
                   <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
                 </svg>
               </button>
@@ -1463,7 +1487,8 @@ export default function TypingTestClient({
                         passStrokeWiseMet ? "text-emerald-200" : "text-rose-200"
                       }
                     >
-                      Stroke-wise {requiredStrokeWords}+ ({strokeWiseCorrectWords ?? 0})
+                      Stroke-wise {requiredStrokeWords}+ (
+                      {strokeWiseCorrectWords ?? 0})
                     </span>
                   </div>
                 </div>
@@ -1495,7 +1520,11 @@ export default function TypingTestClient({
               <div className="my-1 border-t border-white/10" />
               <FinishRow
                 label="Total Time"
-                value={isUnlimited ? formatDuration(customElapsedSeconds) : formatDuration(durationSeconds)}
+                value={
+                  isUnlimited
+                    ? formatDuration(customElapsedSeconds)
+                    : formatDuration(durationSeconds)
+                }
               />
               <FinishRow label="Final WPM (Per Minute)" value={String(wpm)} />
               <FinishRow
@@ -1503,7 +1532,11 @@ export default function TypingTestClient({
                 value={String(totalTypedWords)}
               />
               <div className="my-1 border-t border-white/10" />
-              <FinishRow label="Final Accuracy" value={`${accuracy}%`} variant="accuracy" />
+              <FinishRow
+                label="Final Accuracy"
+                value={`${accuracy}%`}
+                variant="accuracy"
+              />
               <FinishRow
                 label="Correct Words"
                 value={String(finalWordEvaluation.correctWords)}
