@@ -25,11 +25,11 @@ function normalizeText(text, lang, isClassic = false) {
   let normalized = (text || "").normalize("NFC");
   normalized = normalized.replace(/[\u200B-\u200D\uFEFF]/g, "");
   normalized = normalized.replace(/[\u00A0\u202F]/g, " ");
+  if (isClassic) return normalized;
   normalized = normalized.replace(/[\u2018\u2019\u201B\u2032]/g, "'");
   normalized = normalized.replace(/[\u201C\u201D\u2033]/g, '"');
   normalized = normalized.replace(/[\u2012\u2013\u2014\u2212]/g, "-");
   normalized = normalized.replace(/\u2026/g, "...");
-  if (isClassic) return normalized;
   // Normalize various danda forms to standard Bengali danda if likely Bengali
   if (lang === "bn" || /[\u0980-\u09FF]/.test(normalized)) {
     return normalized
