@@ -49,10 +49,13 @@ function hasBengaliUnicode(text) {
 
 function applyClassicUnicodeFixups(text) {
   if (!text) return "";
+  const normalized = text.normalize("NFD");
   // Fix common Bijoy conversion artifacts where '্ল' becomes 'স্ন'.
-  return text
+  const fixed = normalized
     .replace(/([ক-হড়ঢ়য়])স্ন/gu, "$1্ল")
-    .replace(/([ক-হড়ঢ়য়])ে([ক-হড়ঢ়য়])ৗ/gu, "$1ৌ$2");
+    .replace(/([ক-হড়ঢ়য়])\u09C7([ক-হড়ঢ়য়])\u09D7/gu, "$1ৌ$2")
+    .replace(/([ক-হড়ঢ়য়])\u09C7\u09D7/gu, "$1ৌ");
+  return fixed.normalize("NFC");
 }
 
 function normalizeClassicWordKey(word) {
