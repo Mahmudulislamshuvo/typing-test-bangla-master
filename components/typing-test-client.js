@@ -47,7 +47,7 @@ function hasBengaliUnicode(text) {
   return BENGALI_UNICODE_RE.test(text || "");
 }
 
-function applyClassicUnicodeFixups(text) {
+function applyClassicUnicodeFixups(text, sourceAscii = "") {
   if (!text) return "";
   const normalized = text.normalize("NFD");
   // Fix common Bijoy conversion artifacts where '্ল' becomes 'স্ন'.
@@ -58,7 +58,14 @@ function applyClassicUnicodeFixups(text) {
       "$1ৌ$2",
     )
     .replace(/([ক-হড়ঢ়য়])\u09C7(?:\u200C|\u200D)?\u09D7/gu, "$1ৌ");
-  return fixed.normalize("NFC");
+  let normalizedFixed = fixed.normalize("NFC");
+  if (sourceAscii.includes("u") && !normalizedFixed.includes("ঁ")) {
+    normalizedFixed = normalizedFixed
+      .replace(/ৌ/u, "ৌঁ")
+      .replace(/ো/u, "োঁ")
+      .replace(/া/u, "াঁ");
+  }
+  return normalizedFixed;
 }
 
 function normalizeClassicWordKey(word) {
@@ -72,7 +79,7 @@ function toClassicComparableWord(word) {
   const unicodeWord = hasBengaliUnicode(cleaned)
     ? cleaned
     : bnAnsiToUnicode(cleaned);
-  const fixedUnicode = applyClassicUnicodeFixups(unicodeWord);
+  const fixedUnicode = applyClassicUnicodeFixups(unicodeWord, cleaned);
   return normalizeClassicWordKey(fixedUnicode);
 }
 
@@ -80,30 +87,18 @@ function toUnicodeDisplayWord(word) {
   if (!word) return "";
   const cleaned = normalizeText(word, "bn", true);
   if (hasBengaliUnicode(cleaned)) return cleaned;
-  return applyClassicUnicodeFixups(bnAnsiToUnicode(cleaned));
+  return applyClassicUnicodeFixups(bnAnsiToUnicode(cleaned), cleaned);
 }
 
 function splitClassicComparableWords(text, includeTrailingPartial = false) {
-  const cleaned = normalizeText(text, "bn", true);
-  const unicodeText = hasBengaliUnicode(cleaned)
-    ? cleaned
-    : bnAnsiToUnicode(cleaned);
-  const fixedUnicodeText = applyClassicUnicodeFixups(unicodeText);
-  const normalized = normalizeText(fixedUnicodeText, "bn", false).replace(
-    /\n/g,
-    " ",
+  const sourceWords = splitStrictWords(
+    text,
+    "bn",
+    includeTrailingPartial,
+    true,
   );
-
-  if (!normalized.trim()) return [];
-
-  const words = (normalized.match(/\S+/gu) || []).slice();
-  const hasTrailingWhitespace = /\s$/u.test(normalized);
-
-  if (!includeTrailingPartial && !hasTrailingWhitespace && words.length > 0) {
-    words.pop();
-  }
-
-  return words.map(normalizeClassicWordKey);
+  if (!sourceWords.length) return [];
+  return sourceWords.map(toClassicComparableWord);
 }
 
 function splitGraphemes(text, locale, isClassic = false) {
