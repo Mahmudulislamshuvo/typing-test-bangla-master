@@ -47,6 +47,12 @@ function hasBengaliUnicode(text) {
   return BENGALI_UNICODE_RE.test(text || "");
 }
 
+function applyClassicUnicodeFixups(text) {
+  if (!text) return "";
+  // Fix common Bijoy conversion artifacts where '্ল' becomes 'স্ন'.
+  return text.replace(/([ক-হড়ঢ়য়])স্ন/gu, "$1্ল");
+}
+
 function normalizeClassicWordKey(word) {
   const normalized = normalizeText(word, "bn", false);
   return normalized.replace(TRAILING_PUNCT_RE, "");
@@ -58,14 +64,15 @@ function toClassicComparableWord(word) {
   const unicodeWord = hasBengaliUnicode(cleaned)
     ? cleaned
     : bnAnsiToUnicode(cleaned);
-  return normalizeClassicWordKey(unicodeWord);
+  const fixedUnicode = applyClassicUnicodeFixups(unicodeWord);
+  return normalizeClassicWordKey(fixedUnicode);
 }
 
 function toUnicodeDisplayWord(word) {
   if (!word) return "";
   const cleaned = normalizeText(word, "bn", true);
   if (hasBengaliUnicode(cleaned)) return cleaned;
-  return bnAnsiToUnicode(cleaned);
+  return applyClassicUnicodeFixups(bnAnsiToUnicode(cleaned));
 }
 
 function splitClassicComparableWords(text, includeTrailingPartial = false) {
@@ -73,7 +80,8 @@ function splitClassicComparableWords(text, includeTrailingPartial = false) {
   const unicodeText = hasBengaliUnicode(cleaned)
     ? cleaned
     : bnAnsiToUnicode(cleaned);
-  const normalized = normalizeText(unicodeText, "bn", false).replace(
+  const fixedUnicodeText = applyClassicUnicodeFixups(unicodeText);
+  const normalized = normalizeText(fixedUnicodeText, "bn", false).replace(
     /\n/g,
     " ",
   );
