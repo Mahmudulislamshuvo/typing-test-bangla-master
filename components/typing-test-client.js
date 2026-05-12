@@ -53,8 +53,11 @@ function applyClassicUnicodeFixups(text) {
   // Fix common Bijoy conversion artifacts where '্ল' becomes 'স্ন'.
   const fixed = normalized
     .replace(/([ক-হড়ঢ়য়])স্ন/gu, "$1্ল")
-    .replace(/([ক-হড়ঢ়য়])\u09C7([ক-হড়ঢ়য়])\u09D7/gu, "$1ৌ$2")
-    .replace(/([ক-হড়ঢ়য়])\u09C7\u09D7/gu, "$1ৌ");
+    .replace(
+      /([ক-হড়ঢ়য়])\u09C7([ক-হড়ঢ়য়])(?:\u200C|\u200D)?\u09D7/gu,
+      "$1ৌ$2",
+    )
+    .replace(/([ক-হড়ঢ়য়])\u09C7(?:\u200C|\u200D)?\u09D7/gu, "$1ৌ");
   return fixed.normalize("NFC");
 }
 
