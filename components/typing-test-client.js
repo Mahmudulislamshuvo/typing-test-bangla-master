@@ -611,19 +611,30 @@ export default function TypingTestClient({
   );
 
   const timingSummary = useMemo(() => {
-    if (!wordTimings.length) return null;
+    if (!wordTimings.length && !finalTypedWords.length) return null;
 
-    const durations = wordTimings.map((entry) => entry.durationMs);
+    const wordCount = Math.max(finalTypedWords.length, wordTimings.length);
+    if (wordCount === 0) return null;
+
+    const durations = Array.from({ length: wordCount }, (_, index) =>
+      Number.isFinite(wordTimings[index]?.durationMs)
+        ? wordTimings[index].durationMs
+        : 0,
+    );
     const maxDuration = Math.max(...durations);
     const minDuration = Math.min(...durations);
-    const strokeCounts = wordTimings.map((entry) => entry.word.length);
+    const strokeCounts = Array.from(
+      { length: wordCount },
+      (_, index) =>
+        (finalTypedWords[index] || wordTimings[index]?.word || "").length,
+    );
     const strokeWords = strokeCounts.map((count) =>
       Number((count / 5).toFixed(2)),
     );
 
-    const wpmByWord = wordTimings.map((entry) => {
-      const minutes = entry.durationMs / 60000;
-      const raw = minutes > 0 ? entry.word.length / 5 / minutes : 0;
+    const wpmByWord = durations.map((durationMs, index) => {
+      const minutes = durationMs / 60000;
+      const raw = minutes > 0 ? strokeCounts[index] / 5 / minutes : 0;
       return Math.round(raw);
     });
 
@@ -641,7 +652,7 @@ export default function TypingTestClient({
       wpmByWord,
       slowest,
     };
-  }, [wordTimings]);
+  }, [finalTypedWords, wordTimings]);
 
   const timingChart = useMemo(() => {
     if (!timingSummary) return null;
@@ -1239,6 +1250,14 @@ export default function TypingTestClient({
     ? "Your own text with the same analytics and reports."
     : "Server-driven data with Unicode-safe strict word validation.";
   const refreshLabel = isCustomSource ? "Reload Text" : "New Stream";
+  const getTimingDisplayWord = (index) => {
+    if (isClassicMode) {
+      const raw = finalTypedWords[index] || wordTimings[index]?.word || "";
+      return toUnicodeDisplayWord(raw) || "-";
+    }
+
+    return wordTimings[index]?.word || "-";
+  };
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_10%_10%,#0f766e_0%,#052e2b_35%,#041b19_100%)] px-4 py-10 text-slate-100 sm:px-6 lg:px-10">
@@ -1839,11 +1858,7 @@ export default function TypingTestClient({
                                 : "text-amber-200"
                             } ${timingWordFontClass}`}
                           >
-                            {isClassicMode
-                              ? toUnicodeDisplayWord(
-                                  wordTimings[hoveredWordIndex]?.word,
-                                ) || "-"
-                              : wordTimings[hoveredWordIndex]?.word || "-"}
+                            {getTimingDisplayWord(hoveredWordIndex)}
                           </div>
                           <div className="text-slate-200/70">
                             Index: {hoveredWordIndex + 1}
@@ -1911,11 +1926,7 @@ export default function TypingTestClient({
                       <span>
                         Words under 20 WPM:{" "}
                         {slowEntries.map((entry, index) => {
-                          const label = isClassicMode
-                            ? toUnicodeDisplayWord(
-                                wordTimings[entry.index]?.word,
-                              ) || "-"
-                            : wordTimings[entry.index]?.word || "-";
+                          const label = getTimingDisplayWord(entry.index);
                           const time = (
                             (wordTimings[entry.index]?.durationMs || 0) / 1000
                           ).toFixed(2);
