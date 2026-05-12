@@ -50,7 +50,9 @@ function hasBengaliUnicode(text) {
 function applyClassicUnicodeFixups(text) {
   if (!text) return "";
   // Fix common Bijoy conversion artifacts where '্ল' becomes 'স্ন'.
-  return text.replace(/([ক-হড়ঢ়য়])স্ন/gu, "$1্ল");
+  return text
+    .replace(/([ক-হড়ঢ়য়])স্ন/gu, "$1্ল")
+    .replace(/([ক-হড়ঢ়য়])ে([ক-হড়ঢ়য়])ৗ/gu, "$1ৌ$2");
 }
 
 function normalizeClassicWordKey(word) {
