@@ -40,6 +40,16 @@ function normalizeText(text, lang, isClassic = false) {
   return normalized;
 }
 
+function normalizeBengaliForComparison(text) {
+  const normalized = normalizeText(text, "bn", false);
+  if (!normalized) return "";
+  return normalized
+    .replace(/\u09AF\u09BC/g, "\u09DF")
+    .replace(/\u09A1\u09BC/g, "\u09DC")
+    .replace(/\u09A2\u09BC/g, "\u09DD")
+    .replace(/\u0982/g, "\u0981");
+}
+
 const BENGALI_UNICODE_RE = /[\u0980-\u09FF]/;
 const TRAILING_PUNCT_RE = /^[\p{P}\p{S}]+|[\p{P}\p{S}]+$/gu;
 
@@ -69,7 +79,7 @@ function applyClassicUnicodeFixups(text, sourceAscii = "") {
 }
 
 function normalizeClassicWordKey(word) {
-  const normalized = normalizeText(word, "bn", false);
+  const normalized = normalizeBengaliForComparison(word);
   return normalized.replace(TRAILING_PUNCT_RE, "");
 }
 
@@ -509,6 +519,11 @@ export default function TypingTestClient({
     return targetWords.map(toClassicComparableWord);
   }, [isClassicMode, targetWords]);
 
+  const normalizedBanglaTargetWords = useMemo(() => {
+    if (!isBangla || isClassicMode) return comparisonTargetWords;
+    return comparisonTargetWords.map(normalizeBengaliForComparison);
+  }, [comparisonTargetWords, isBangla, isClassicMode]);
+
   const effectiveTargetWords = targetWords;
 
   const activeWordIndex = liveTypedWords.length;
@@ -550,13 +565,15 @@ export default function TypingTestClient({
 
   const liveWordEvaluation = useMemo(() => {
     const targetSlice = getTargetSlice(
-      comparisonTargetWords,
+      normalizedBanglaTargetWords,
       liveTypedWords.length,
       false,
     );
     const comparisonTypedWords = isClassicMode
       ? liveClassicComparableWords
-      : liveTypedWords;
+      : isBangla
+        ? liveTypedWords.map(normalizeBengaliForComparison)
+        : liveTypedWords;
     const wordStatuses = isCustomSource
       ? compareWordsPositional(comparisonTypedWords, targetSlice)
       : alignStrictWords(comparisonTypedWords, targetSlice);
@@ -572,22 +589,25 @@ export default function TypingTestClient({
     }, 0);
     return { correctWords, incorrectWords, wordStatuses, correctStrokes };
   }, [
-    comparisonTargetWords,
+    normalizedBanglaTargetWords,
     isClassicMode,
     isCustomSource,
     liveClassicComparableWords,
     liveTypedWords,
+    isBangla,
   ]);
 
   const finalWordEvaluation = useMemo(() => {
     const targetSlice = getTargetSlice(
-      comparisonTargetWords,
+      normalizedBanglaTargetWords,
       finalTypedWords.length,
       true,
     );
     const comparisonTypedWords = isClassicMode
       ? finalClassicComparableWords
-      : finalTypedWords;
+      : isBangla
+        ? finalTypedWords.map(normalizeBengaliForComparison)
+        : finalTypedWords;
     const wordStatuses = isCustomSource
       ? compareWordsPositional(comparisonTypedWords, targetSlice)
       : alignStrictWords(comparisonTypedWords, targetSlice);
@@ -604,11 +624,12 @@ export default function TypingTestClient({
 
     return { correctWords, incorrectWords, wordStatuses, correctStrokes };
   }, [
-    comparisonTargetWords,
+    normalizedBanglaTargetWords,
     finalClassicComparableWords,
     finalTypedWords,
     isClassicMode,
     isCustomSource,
+    isBangla,
   ]);
 
   const wordStats = isFinished ? finalWordEvaluation : liveWordEvaluation;
@@ -1230,6 +1251,7 @@ export default function TypingTestClient({
     };
 
     saveReport();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     isFinished,
     wpm,
