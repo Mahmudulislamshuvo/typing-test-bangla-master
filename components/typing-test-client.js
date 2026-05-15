@@ -64,6 +64,7 @@ function applyClassicUnicodeFixups(text, sourceAscii = "") {
   // Fix common Bijoy conversion artifacts where '্ল' becomes 'স্ন'.
   const fixed = normalized
     .replace(/([ক-হড়ঢ়য়])স্ন/gu, "$1্ল")
+    .replace(/তৃর্/gu, "র্তৃ")
     .replace(
       /([ক-হড়ঢ়য়])\u09C7([ক-হড়ঢ়য়])(?:\u200C|\u200D)?\u09D7/gu,
       "$1ৌ$2",
