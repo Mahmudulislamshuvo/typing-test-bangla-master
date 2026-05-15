@@ -13,7 +13,28 @@ export async function POST(req) {
 
     // Broadcast the new report to connected clients via Pusher
     if (pusherServer) {
-      const payload = report.toObject ? report.toObject() : report;
+      const fullPayload = report.toObject ? report.toObject() : report;
+      const payload = {
+        _id: fullPayload._id,
+        deviceName: fullPayload.deviceName,
+        wpm: fullPayload.wpm,
+        accuracy: fullPayload.accuracy,
+        language: fullPayload.language,
+        duration: fullPayload.duration,
+        durationSeconds: fullPayload.durationSeconds,
+        mode: fullPayload.mode,
+        testType: fullPayload.testType,
+        result: fullPayload.result,
+        date: fullPayload.date,
+        correctStrokes: fullPayload.correctStrokes,
+        correctWords: fullPayload.correctWords,
+        totalWords: fullPayload.totalWords,
+        strokeWiseCorrectWords: fullPayload.strokeWiseCorrectWords,
+        strokeWiseCorrectWordsWithSpaces:
+          fullPayload.strokeWiseCorrectWordsWithSpaces,
+        strokeWiseCorrectCharacters: fullPayload.strokeWiseCorrectCharacters,
+        inputMode: fullPayload.inputMode,
+      };
       // MUST await the trigger in serverless environments or it will be cancelled!
       await pusherServer
         .trigger("reports-channel", "new-report", payload)
