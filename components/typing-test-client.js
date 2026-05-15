@@ -47,7 +47,8 @@ function normalizeBengaliForComparison(text) {
     .replace(/\u09AF\u09BC/g, "\u09DF")
     .replace(/\u09A1\u09BC/g, "\u09DC")
     .replace(/\u09A2\u09BC/g, "\u09DD")
-    .replace(/\u0982/g, "\u0981");
+    .replace(/\u0982/g, "\u0981")
+    .replace(/\u09CE/g, "\u09A4\u09CD");
 }
 
 const BENGALI_UNICODE_RE = /[\u0980-\u09FF]/;
