@@ -338,6 +338,7 @@ export default function TypingTestClient({
   customSourceText = "",
   inputMode = "unicode",
   languageOptions,
+  hideTargetHighlights = false,
 }) {
   const pathname = usePathname();
   const hideTargetText =
@@ -371,6 +372,7 @@ export default function TypingTestClient({
 
   const isClassicMode = inputMode === "bijoy-classic";
   const isBangla = language === "bn";
+  const suppressTargetHighlights = hideTargetHighlights;
   const resolvedLanguageOptions =
     Array.isArray(languageOptions) && languageOptions.length
       ? languageOptions
@@ -847,14 +849,20 @@ export default function TypingTestClient({
   ]);
 
   const passageCharStates = useMemo(() => {
-    if (displayMode !== "passage") return null;
+    if (displayMode !== "passage" || suppressTargetHighlights) return null;
     return buildPassageCharStates(
       effectiveTargetWords,
       finalTypedWords,
       locale,
       false,
     );
-  }, [displayMode, effectiveTargetWords, finalTypedWords, locale]);
+  }, [
+    displayMode,
+    effectiveTargetWords,
+    finalTypedWords,
+    locale,
+    suppressTargetHighlights,
+  ]);
 
   const passageWindow = useMemo(() => {
     const start = Math.max(0, currentCharIndex - 220);
@@ -1412,7 +1420,9 @@ export default function TypingTestClient({
               </p>
             ) : displayMode === "ticker" ? (
               <div className="relative overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 px-4 py-8">
-                <div className="pointer-events-none absolute inset-y-0 left-[38%] w-[2px] bg-amber-400/80" />
+                {!suppressTargetHighlights ? (
+                  <div className="pointer-events-none absolute inset-y-0 left-[38%] w-[2px] bg-amber-400/80" />
+                ) : null}
                 <div
                   ref={tickerContainerRef}
                   className="whitespace-nowrap text-2xl font-semibold leading-relaxed text-black transition-transform duration-300 ease-out sm:text-3xl"
@@ -1424,7 +1434,10 @@ export default function TypingTestClient({
                     const globalIndex = tickerWindow.start + localIndex;
                     let className = "text-black";
 
-                    if (globalIndex < liveWordEvaluation.wordStatuses.length) {
+                    if (
+                      !suppressTargetHighlights &&
+                      globalIndex < liveWordEvaluation.wordStatuses.length
+                    ) {
                       className =
                         liveWordEvaluation.wordStatuses[globalIndex] ===
                         "correct"
@@ -1432,7 +1445,11 @@ export default function TypingTestClient({
                           : "text-rose-600";
                     }
 
-                    if (!isFinished && globalIndex === activeWordIndex) {
+                    if (
+                      !suppressTargetHighlights &&
+                      !isFinished &&
+                      globalIndex === activeWordIndex
+                    ) {
                       className = "rounded bg-amber-300 px-1 text-slate-900";
                     }
 
@@ -1468,7 +1485,11 @@ export default function TypingTestClient({
                     }
                   }
 
-                  if (!isFinished && absoluteIndex === currentCharIndex) {
+                  if (
+                    !suppressTargetHighlights &&
+                    !isFinished &&
+                    absoluteIndex === currentCharIndex
+                  ) {
                     className =
                       "rounded bg-amber-300 px-[1px] text-slate-900 shadow-[0_0_0_1px_rgba(251,191,36,0.45)]";
                   }
