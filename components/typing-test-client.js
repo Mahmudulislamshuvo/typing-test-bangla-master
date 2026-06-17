@@ -848,27 +848,33 @@ export default function TypingTestClient({
     typedText,
   ]);
 
-  const passageCharStates = useMemo(() => {
-    if (displayMode !== "passage" || suppressTargetHighlights) return null;
-    return buildPassageCharStates(
-      effectiveTargetWords,
-      finalTypedWords,
-      locale,
-      false,
+  // Word-based passage window — fixes Bengali Unicode font shaping.
+  // Per-char <span> splitting breaks cross-span ligature/reph rendering
+  // (e.g. র্চ in ভার্চুয়াল). Keeping whole words in one span lets the
+  // browser's OpenType shaper combine clusters correctly.
+  const passageWordWindow = useMemo(() => {
+    const BACK_WORDS = 15;
+    const FWD_WORDS = 40;
+    const start = Math.max(0, activeWordIndex - BACK_WORDS);
+    const end = Math.min(
+      effectiveTargetWords.length,
+      activeWordIndex + FWD_WORDS,
     );
+    const wordStatuses = suppressTargetHighlights
+      ? null
+      : liveWordEvaluation.wordStatuses;
+    const words = effectiveTargetWords.slice(start, end).map((word, i) => ({
+      word,
+      globalIndex: start + i,
+      status: wordStatuses ? (wordStatuses[start + i] ?? "pending") : "pending",
+    }));
+    return { start, words };
   }, [
-    displayMode,
+    activeWordIndex,
     effectiveTargetWords,
-    finalTypedWords,
-    locale,
+    liveWordEvaluation.wordStatuses,
     suppressTargetHighlights,
   ]);
-
-  const passageWindow = useMemo(() => {
-    const start = Math.max(0, currentCharIndex - 220);
-    const end = Math.min(targetChars.length, currentCharIndex + 320);
-    return { start, chars: targetChars.slice(start, end) };
-  }, [currentCharIndex, targetChars]);
 
   const tickerContainerRef = useRef(null);
   const [tickerOffsetLeft, setTickerOffsetLeft] = useState(0);
@@ -1468,38 +1474,33 @@ export default function TypingTestClient({
                 </div>
               </div>
             ) : (
-              <p className="leading-8 sm:text-lg">
-                {passageWindow.start > 0 && (
-                  <span className="text-black">... </span>
+              <p className="leading-relaxed sm:text-lg">
+                {passageWordWindow.start > 0 && (
+                  <span className="text-slate-400">... </span>
                 )}
-                {passageWindow.chars.map((char, index) => {
-                  const absoluteIndex = passageWindow.start + index;
+                {passageWordWindow.words.map(({ word, globalIndex, status }) => {
                   let className = "text-black";
 
-                  if (passageCharStates) {
-                    const status = passageCharStates[absoluteIndex];
-                    if (status === "correct") {
-                      className = "text-emerald-700";
-                    } else if (status === "incorrect") {
-                      className = "text-rose-600";
+                  if (!suppressTargetHighlights) {
+                    if (globalIndex < activeWordIndex) {
+                      // already typed words
+                      className =
+                        status === "correct"
+                          ? "text-emerald-700"
+                          : "text-rose-600";
+                    } else if (!isFinished && globalIndex === activeWordIndex) {
+                      // currently active word — amber highlight
+                      className =
+                        "rounded bg-amber-300 px-[1px] text-slate-900 shadow-[0_0_0_1px_rgba(251,191,36,0.45)]";
                     }
-                  }
-
-                  if (
-                    !suppressTargetHighlights &&
-                    !isFinished &&
-                    absoluteIndex === currentCharIndex
-                  ) {
-                    className =
-                      "rounded bg-amber-300 px-[1px] text-slate-900 shadow-[0_0_0_1px_rgba(251,191,36,0.45)]";
                   }
 
                   return (
                     <span
-                      key={`${char}-${absoluteIndex}`}
-                      className={className}
+                      key={`${word}-${globalIndex}`}
+                      className={`${className} mr-[0.35em] inline-block`}
                     >
-                      {char}
+                      {word}
                     </span>
                   );
                 })}
