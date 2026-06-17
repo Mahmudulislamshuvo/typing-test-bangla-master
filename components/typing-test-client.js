@@ -40,15 +40,31 @@ function normalizeText(text, lang, isClassic = false) {
   return normalized;
 }
 
-function normalizeBengaliForComparison(text) {
+// Unicode mode: only handle standard Unicode equivalences that NFC misses.
+// Do NOT apply Classic ANSI-conversion artefact fixes here — those belong
+// only in the Classic comparison path and would corrupt real Unicode input.
+function normalizeUnicodeBengaliForComparison(text) {
   const normalized = normalizeText(text, "bn", false);
   if (!normalized) return "";
+  // These three are canonical decompositions that NFC already handles,
+  // but we keep them as a safety net for environments where NFC may not
+  // compose them (e.g. some older runtimes).
   return normalized
-    .replace(/\u09AF\u09BC/g, "\u09DF")
-    .replace(/\u09A1\u09BC/g, "\u09DC")
-    .replace(/\u09A2\u09BC/g, "\u09DD")
-    .replace(/\u0982/g, "\u0981")
-    .replace(/\u09CE/g, "\u09A4\u09CD");
+    .replace(/\u09AF\u09BC/g, "\u09DF") // য + ় → য়
+    .replace(/\u09A1\u09BC/g, "\u09DC") // ড + ় → ড়
+    .replace(/\u09A2\u09BC/g, "\u09DD"); // ঢ + ় → ঢ়
+}
+
+// Classic mode: apply all ANSI-to-Unicode conversion artefact fixes ON TOP
+// of the base Unicode equivalences. These rules are intentionally NOT applied
+// to real Unicode input because they would create false matches (e.g.
+// treating ং and ঁ as equal even though they are distinct phonemes).
+function normalizeClassicBengaliForComparison(text) {
+  const base = normalizeUnicodeBengaliForComparison(text);
+  if (!base) return "";
+  return base
+    .replace(/\u0982/g, "\u0981") // ং → ঁ  (ANSI conversion artefact)
+    .replace(/\u09CE/g, "\u09A4\u09CD"); // ৎ → ত্ (ANSI conversion artefact)
 }
 
 const BENGALI_UNICODE_RE = /[\u0980-\u09FF]/;
@@ -81,7 +97,7 @@ function applyClassicUnicodeFixups(text, sourceAscii = "") {
 }
 
 function normalizeClassicWordKey(word) {
-  const normalized = normalizeBengaliForComparison(word);
+  const normalized = normalizeClassicBengaliForComparison(word);
   return normalized.replace(TRAILING_PUNCT_RE, "");
 }
 
@@ -525,7 +541,7 @@ export default function TypingTestClient({
 
   const normalizedBanglaTargetWords = useMemo(() => {
     if (!isBangla || isClassicMode) return comparisonTargetWords;
-    return comparisonTargetWords.map(normalizeBengaliForComparison);
+    return comparisonTargetWords.map(normalizeUnicodeBengaliForComparison);
   }, [comparisonTargetWords, isBangla, isClassicMode]);
 
   const effectiveTargetWords = targetWords;
@@ -576,7 +592,7 @@ export default function TypingTestClient({
     const comparisonTypedWords = isClassicMode
       ? liveClassicComparableWords
       : isBangla
-        ? liveTypedWords.map(normalizeBengaliForComparison)
+        ? liveTypedWords.map(normalizeUnicodeBengaliForComparison)
         : liveTypedWords;
     const wordStatuses = isCustomSource
       ? compareWordsPositional(comparisonTypedWords, targetSlice)
@@ -610,7 +626,7 @@ export default function TypingTestClient({
     const comparisonTypedWords = isClassicMode
       ? finalClassicComparableWords
       : isBangla
-        ? finalTypedWords.map(normalizeBengaliForComparison)
+        ? finalTypedWords.map(normalizeUnicodeBengaliForComparison)
         : finalTypedWords;
     const wordStatuses = isCustomSource
       ? compareWordsPositional(comparisonTypedWords, targetSlice)
