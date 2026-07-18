@@ -11,6 +11,30 @@ import {
 import { usePathname } from "next/navigation";
 import bnAnsiToUnicode from "bn-ansi-to-unicode";
 
+// Modular imports — no more duplicate utility functions
+import { normalizeText } from "@/lib/unicode/text-normalizer";
+import {
+  splitGraphemes,
+  splitBengaliGraphemes,
+  isBengaliCombiningMark,
+} from "@/lib/unicode/grapheme-splitter";
+import {
+  normalizeUnicodeBengaliForComparison,
+  hasBengaliUnicode,
+  BENGALI_UNICODE_RE,
+} from "@/lib/unicode/bengali-normalizer";
+import { applyClassicUnicodeFixups } from "@/lib/classic/bijoy-converter";
+import {
+  normalizeClassicBengaliForComparison,
+  normalizeClassicWordKey,
+} from "@/lib/classic/classic-normalizer";
+import { alignStrictWords } from "@/lib/comparison/word-aligner";
+import {
+  compareWordsPositional,
+  buildWordReport,
+  getTargetSlice,
+} from "@/lib/comparison/word-comparator";
+
 const DURATION_OPTIONS = [1, 2, 3, 5, 10, 15, 20];
 const DISPLAY_MODES = [
   { value: "passage", label: "Passage Mode" },
@@ -21,85 +45,7 @@ const LANGUAGE_OPTIONS = [
   { value: "bn", label: "বাংলা" },
 ];
 
-function normalizeText(text, lang, isClassic = false) {
-  let normalized = (text || "").normalize("NFC");
-  normalized = normalized.replace(/[\u200B-\u200D\uFEFF]/g, "");
-  normalized = normalized.replace(/[\u00A0\u202F]/g, " ");
-  if (isClassic) return normalized;
-  normalized = normalized.replace(/[\u2018\u2019\u201B\u2032]/g, "'");
-  normalized = normalized.replace(/[\u201C\u201D\u2033]/g, '"');
-  normalized = normalized.replace(/[\u2012\u2013\u2014\u2212]/g, "-");
-  normalized = normalized.replace(/\u2026/g, "...");
-  // Normalize various danda forms to standard Bengali danda if likely Bengali
-  if (lang === "bn" || /[\u0980-\u09FF]/.test(normalized)) {
-    return normalized
-      .replace(/\|/g, "।")
-      .replace(/\\/g, "।")
-      .replace(/\u0965/g, "।");
-  }
-  return normalized;
-}
-
-// Unicode mode: only handle standard Unicode equivalences that NFC misses.
-// Do NOT apply Classic ANSI-conversion artefact fixes here — those belong
-// only in the Classic comparison path and would corrupt real Unicode input.
-function normalizeUnicodeBengaliForComparison(text) {
-  const normalized = normalizeText(text, "bn", false);
-  if (!normalized) return "";
-  // These three are canonical decompositions that NFC already handles,
-  // but we keep them as a safety net for environments where NFC may not
-  // compose them (e.g. some older runtimes).
-  return normalized
-    .replace(/\u09AF\u09BC/g, "\u09DF") // য + ় → য়
-    .replace(/\u09A1\u09BC/g, "\u09DC") // ড + ় → ড়
-    .replace(/\u09A2\u09BC/g, "\u09DD"); // ঢ + ় → ঢ়
-}
-
-// Classic mode: apply all ANSI-to-Unicode conversion artefact fixes ON TOP
-// of the base Unicode equivalences. These rules are intentionally NOT applied
-// to real Unicode input because they would create false matches (e.g.
-// treating ং and ঁ as equal even though they are distinct phonemes).
-function normalizeClassicBengaliForComparison(text) {
-  const base = normalizeUnicodeBengaliForComparison(text);
-  if (!base) return "";
-  return base
-    .replace(/\u0982/g, "\u0981") // ং → ঁ  (ANSI conversion artefact)
-    .replace(/\u09CE/g, "\u09A4\u09CD"); // ৎ → ত্ (ANSI conversion artefact)
-}
-
-const BENGALI_UNICODE_RE = /[\u0980-\u09FF]/;
-const TRAILING_PUNCT_RE = /^[\p{P}\p{S}]+|[\p{P}\p{S}]+$/gu;
-
-function hasBengaliUnicode(text) {
-  return BENGALI_UNICODE_RE.test(text || "");
-}
-
-function applyClassicUnicodeFixups(text, sourceAscii = "") {
-  if (!text) return "";
-  const normalized = text.normalize("NFD");
-  // Fix common Bijoy conversion artifacts where '্ল' becomes 'স্ন'.
-  const fixed = normalized
-    .replace(/([ক-হড়ঢ়য়])স্ন/gu, "$1্ল")
-    .replace(/তৃর্/gu, "র্তৃ")
-    .replace(
-      /([ক-হড়ঢ়য়])\u09C7([ক-হড়ঢ়য়])(?:\u200C|\u200D)?\u09D7/gu,
-      "$1ৌ$2",
-    )
-    .replace(/([ক-হড়ঢ়য়])\u09C7(?:\u200C|\u200D)?\u09D7/gu, "$1ৌ");
-  let normalizedFixed = fixed.normalize("NFC");
-  if (sourceAscii.includes("u") && !normalizedFixed.includes("ঁ")) {
-    normalizedFixed = normalizedFixed
-      .replace(/ৌ/u, "ৌঁ")
-      .replace(/ো/u, "োঁ")
-      .replace(/া/u, "াঁ");
-  }
-  return normalizedFixed;
-}
-
-function normalizeClassicWordKey(word) {
-  const normalized = normalizeClassicBengaliForComparison(word);
-  return normalized.replace(TRAILING_PUNCT_RE, "");
-}
+// ── Classic mode helpers (use imported utilities + bn-ansi-to-unicode) ──
 
 function toClassicComparableWord(word) {
   if (!word) return "";
@@ -119,7 +65,7 @@ function toUnicodeDisplayWord(word) {
 }
 
 function splitClassicComparableWords(text, includeTrailingPartial = false) {
-  const sourceWords = splitStrictWords(
+  const sourceWords = splitStrictWordsLocal(
     text,
     "bn",
     includeTrailingPartial,
@@ -129,16 +75,9 @@ function splitClassicComparableWords(text, includeTrailingPartial = false) {
   return sourceWords.map(toClassicComparableWord);
 }
 
-function splitGraphemes(text, locale, isClassic = false) {
-  const cleanText = normalizeText(text, locale, isClassic);
-  if (typeof Intl !== "undefined" && Intl.Segmenter) {
-    const segmenter = new Intl.Segmenter(locale, { granularity: "grapheme" });
-    return Array.from(segmenter.segment(cleanText), (x) => x.segment);
-  }
-  return Array.from(cleanText);
-}
+// ── Word splitting with Classic support ──
 
-function splitStrictWords(
+function splitStrictWordsLocal(
   text,
   lang,
   includeTrailingPartial = false,
@@ -160,127 +99,6 @@ function splitStrictWords(
   }
 
   return words;
-}
-
-function alignStrictWords(typedWords, targetWords) {
-  const rowCount = typedWords.length + 1;
-  const colCount = targetWords.length + 1;
-
-  const dp = Array.from({ length: rowCount }, () => Array(colCount).fill(0));
-  const backtrack = Array.from({ length: rowCount }, () =>
-    Array(colCount).fill(null),
-  );
-
-  for (let i = 1; i < rowCount; i += 1) {
-    dp[i][0] = i;
-    backtrack[i][0] = "insert";
-  }
-
-  for (let j = 1; j < colCount; j += 1) {
-    dp[0][j] = j;
-    backtrack[0][j] = "delete";
-  }
-
-  const priority = {
-    match: 1,
-    insert: 2,
-    delete: 2,
-    substitute: 3,
-  };
-
-  for (let i = 1; i < rowCount; i += 1) {
-    for (let j = 1; j < colCount; j += 1) {
-      const isExactMatch = typedWords[i - 1] === targetWords[j - 1];
-      const diagonalAction = isExactMatch ? "match" : "substitute";
-
-      const candidates = [
-        {
-          action: diagonalAction,
-          cost: dp[i - 1][j - 1] + (isExactMatch ? 0 : 1),
-        },
-        { action: "insert", cost: dp[i - 1][j] + 1 },
-        { action: "delete", cost: dp[i][j - 1] + 1 },
-      ];
-
-      candidates.sort((a, b) => {
-        if (a.cost !== b.cost) {
-          return a.cost - b.cost;
-        }
-        return priority[a.action] - priority[b.action];
-      });
-
-      dp[i][j] = candidates[0].cost;
-      backtrack[i][j] = candidates[0].action;
-    }
-  }
-
-  const wordStatuses = Array(typedWords.length).fill("incorrect");
-
-  let i = typedWords.length;
-  let j = targetWords.length;
-
-  while (i > 0 || j > 0) {
-    const action = backtrack[i][j];
-
-    if ((action === "match" || action === "substitute") && i > 0 && j > 0) {
-      wordStatuses[i - 1] = action === "match" ? "correct" : "incorrect";
-      i -= 1;
-      j -= 1;
-      continue;
-    }
-
-    if (action === "insert" && i > 0) {
-      wordStatuses[i - 1] = "incorrect";
-      i -= 1;
-      continue;
-    }
-
-    if (action === "delete" && j > 0) {
-      j -= 1;
-      continue;
-    }
-
-    if (i > 0) {
-      wordStatuses[i - 1] = "incorrect";
-      i -= 1;
-    } else {
-      j -= 1;
-    }
-  }
-
-  return wordStatuses;
-}
-
-function compareWordsPositional(typedWords, targetWords) {
-  return typedWords.map((word, index) =>
-    word === targetWords[index] ? "correct" : "incorrect",
-  );
-}
-
-function buildWordReport(typedText, wordStatuses) {
-  const typedTokens = typedText.match(/\s+|[^\s]+/gu) || [];
-  let wordIndex = 0;
-
-  return typedTokens.map((token, index) => {
-    if (/^\s+$/u.test(token)) {
-      return { key: `space-${index}`, text: token, status: "space" };
-    }
-
-    const status = wordStatuses[wordIndex] || "incorrect";
-    wordIndex += 1;
-
-    return {
-      key: `word-${index}`,
-      text: token,
-      status,
-    };
-  });
-}
-
-function getTargetSlice(targetWords, typedWordCount, isFinal) {
-  const buffer = isFinal ? 120 : 60;
-  const length = Math.max(120, typedWordCount + buffer);
-  return targetWords.slice(0, length);
 }
 
 function getWordStartIndex(targetWords, wordIndex, locale, isClassic = false) {
@@ -516,11 +334,11 @@ export default function TypingTestClient({
   );
 
   const liveTypedWords = useMemo(
-    () => splitStrictWords(typedText, locale, false, isClassicMode),
+    () => splitStrictWordsLocal(typedText, locale, false, isClassicMode),
     [isClassicMode, locale, typedText],
   );
   const finalTypedWords = useMemo(
-    () => splitStrictWords(typedText, locale, true, isClassicMode),
+    () => splitStrictWordsLocal(typedText, locale, true, isClassicMode),
     [isClassicMode, locale, typedText],
   );
 
@@ -1148,7 +966,7 @@ export default function TypingTestClient({
       setIsRunning(true);
     }
 
-    const wordsNow = splitStrictWords(value, locale, true, isClassicMode);
+    const wordsNow = splitStrictWordsLocal(value, locale, true, isClassicMode);
     const targetLength = value === "" ? 0 : wordsNow.length;
     const currentIndex = targetLength > 0 ? targetLength - 1 : 0;
 
