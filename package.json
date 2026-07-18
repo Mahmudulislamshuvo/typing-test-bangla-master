@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@next/swc-win32-x64-msvc": "^16.2.9",
     "bn-ansi-to-unicode": "^1.0.1",
     "firebase": "^12.11.0",
     "mongoose": "^9.3.0",

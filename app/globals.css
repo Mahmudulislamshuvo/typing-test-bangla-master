@@ -41,3 +41,13 @@ body {
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
+
+/* Bengali-specific rendering: ensures OpenType shaping (reph, conjuncts)
+   works correctly in all elements including textareas. */
+[class*="font-bengali"],
+[style*="--font-bengali"],
+.font-bengali-text {
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+  -webkit-font-feature-settings: "kern" 1, "liga" 1, "calt" 1;
+}
