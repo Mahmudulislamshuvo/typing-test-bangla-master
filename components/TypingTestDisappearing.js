@@ -63,11 +63,22 @@ export default function TypingTestDisappearing({
 
   const isFetchingMoreRef = useRef(false);
   const skipInitialSelectionReloadRef = useRef(true);
+  const typingInputRef = useRef(null);
 
   // Track seen documents to cycle through them randomly without repetition
   // Key format: `${lang}-${duration}` -> [shuffled_indices]
   const playlistRef = useRef({});
   const totalDocsRef = useRef({});
+
+  // Bayanno may build a Bengali conjunct through several native input events.
+  // Leave the textarea browser-managed while typing so React never replaces an
+  // intermediate reph/conjunct character. State continues to drive resets.
+  useEffect(() => {
+    const input = typingInputRef.current;
+    if (input && input.value !== currentInput) {
+      input.value = currentInput;
+    }
+  }, [currentInput]);
 
   const savePlaylist = useCallback(() => {
     try {
@@ -745,7 +756,8 @@ export default function TypingTestDisappearing({
             Start Typing (Blind Mode)
           </h2>
           <textarea
-            value={currentInput}
+            ref={typingInputRef}
+            defaultValue=""
             onChange={handleTypingChange}
             onKeyDown={handleKeyDown}
             onCompositionStart={handleCompositionStart}

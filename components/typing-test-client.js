@@ -236,6 +236,7 @@ export default function TypingTestClient({
   const lastWordCountRef = useRef(0);
   const lastTypingTimeRef = useRef(null);
   const fullDocModeRef = useRef(true);
+  const typingInputRef = useRef(null);
   // Bijoy Bayanno and other Bengali Unicode keyboards build conjuncts over
   // several native events. Updating a controlled textarea mid-composition can
   // make the browser discard the consonant that completes a reph.
@@ -246,6 +247,18 @@ export default function TypingTestClient({
   // Key format: `${lang}-${duration}` -> [shuffled_indices]
   const playlistRef = useRef({});
   const totalDocsRef = useRef({});
+
+  // Keep the native textarea uncontrolled while the user types. Bijoy Bayanno
+  // can write a Bengali conjunct through several input events without emitting
+  // composition events, and a controlled value may overwrite an intermediate
+  // character (for example, the ম in ধর্মীয়). State still mirrors the text
+  // for scoring; this effect only applies deliberate external resets.
+  useEffect(() => {
+    const input = typingInputRef.current;
+    if (input && input.value !== typedText) {
+      input.value = typedText;
+    }
+  }, [typedText]);
 
   const savePlaylist = useCallback(() => {
     try {
@@ -1384,7 +1397,8 @@ export default function TypingTestClient({
             Start Typing
           </h2>
           <textarea
-            value={typedText}
+            ref={typingInputRef}
+            defaultValue=""
             onChange={handleTypingChange}
             onCompositionStart={handleCompositionStart}
             onCompositionEnd={handleCompositionEnd}
