@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import TypingTestClient from "@/components/typing-test-client";
+import TypingTestClient from "@/components/typing-test/TypingTestClient";
 
 const CLASSIC_LANGUAGE_OPTIONS = [
   { value: "bn", label: "বাংলা (Bijoy Classic)" },

@@ -1,5 +1,5 @@
-import TypingTestClient from "../../components/typing-test-client";
-import { getRandomWordChunk } from "../../lib/typing-data";
+import TypingTestClient from "@/components/typing-test/TypingTestClient";
+import { getRandomWordChunk } from "@/lib/typing-data";
 
 export const dynamic = "force-dynamic";
 
