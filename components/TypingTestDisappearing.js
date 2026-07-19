@@ -772,10 +772,6 @@ export default function TypingTestDisappearing({
             className={`w-full resize-none rounded-2xl border border-cyan-100/20 bg-slate-950/55 p-4 text-xl leading-8 text-white outline-none transition focus:border-amber-300 focus:ring-2 focus:ring-amber-300/30 sm:text-2xl ${
               language === "bn" ? "[font-family:var(--font-bengali)]" : ""
             }`}
-            onPaste={(event) => event.preventDefault()}
-            onDrop={(event) => event.preventDefault()}
-            onCopy={(event) => event.preventDefault()}
-            onCut={(event) => event.preventDefault()}
             autoCorrect="off"
             autoComplete="off"
             spellCheck={false}
