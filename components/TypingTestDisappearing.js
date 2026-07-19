@@ -457,11 +457,11 @@ export default function TypingTestDisappearing({
   }, [isFinished, isRunning]);
 
   const isComposingRef = useRef(false);
+  const lastCompositionValueRef = useRef(null);
 
-  function handleTypingChange(event) {
+  function commitTypingValue(value) {
     if (isFinished || isLoadingSource || loadError) return;
 
-    const value = event.target.value;
     if (!isRunning && value.trim().length > 0) {
       setIsRunning(true);
     }
@@ -475,12 +475,29 @@ export default function TypingTestDisappearing({
     }
   }
 
-  function handleCompositionStart() {
-    isComposingRef.current = true;
+  function handleTypingChange(event) {
+    const value = event.target.value;
+    if (isComposingRef.current) return;
+
+    if (lastCompositionValueRef.current === value) {
+      lastCompositionValueRef.current = null;
+      return;
+    }
+    lastCompositionValueRef.current = null;
+
+    commitTypingValue(value);
   }
 
-  function handleCompositionEnd() {
+  function handleCompositionStart() {
+    isComposingRef.current = true;
+    lastCompositionValueRef.current = null;
+  }
+
+  function handleCompositionEnd(event) {
     isComposingRef.current = false;
+    const completedValue = event.currentTarget.value;
+    lastCompositionValueRef.current = completedValue;
+    commitTypingValue(completedValue);
   }
 
   function handleKeyDown(event) {

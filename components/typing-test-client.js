@@ -236,6 +236,11 @@ export default function TypingTestClient({
   const lastWordCountRef = useRef(0);
   const lastTypingTimeRef = useRef(null);
   const fullDocModeRef = useRef(true);
+  // Bijoy Bayanno and other Bengali Unicode keyboards build conjuncts over
+  // several native events. Updating a controlled textarea mid-composition can
+  // make the browser discard the consonant that completes a reph.
+  const isComposingRef = useRef(false);
+  const lastCompositionValueRef = useRef(null);
 
   // Track seen documents to cycle through them randomly without repetition
   // Key format: `${lang}-${duration}` -> [shuffled_indices]
@@ -949,10 +954,9 @@ export default function TypingTestClient({
     setIsRunning(false);
   }, [finalTypedWords, isFinished, isUnlimited, targetWords, typedText]);
 
-  function handleTypingChange(event) {
+  function commitTypingValue(rawValue) {
     if (isFinished || isLoadingSource || loadError) return;
 
-    const rawValue = event.target.value;
     const value = rawValue.trimStart();
     const now = performance.now();
 
@@ -1007,6 +1011,38 @@ export default function TypingTestClient({
     });
 
     setTypedText(rawValue);
+  }
+
+  function handleTypingChange(event) {
+    const rawValue = event.target.value;
+
+    // Do not re-render the controlled value while a Bengali keyboard is still
+    // assembling a cluster such as র + ্ + খ. The completed value is committed
+    // from handleCompositionEnd instead.
+    if (isComposingRef.current) return;
+
+    // Some browsers emit one final input event after compositionend. It
+    // contains the value we just committed, so ignore it to avoid counting the
+    // same word timing twice.
+    if (lastCompositionValueRef.current === rawValue) {
+      lastCompositionValueRef.current = null;
+      return;
+    }
+    lastCompositionValueRef.current = null;
+
+    commitTypingValue(rawValue);
+  }
+
+  function handleCompositionStart() {
+    isComposingRef.current = true;
+    lastCompositionValueRef.current = null;
+  }
+
+  function handleCompositionEnd(event) {
+    isComposingRef.current = false;
+    const completedValue = event.currentTarget.value;
+    lastCompositionValueRef.current = completedValue;
+    commitTypingValue(completedValue);
   }
 
   const hasSavedReportRef = useRef(false);
@@ -1350,6 +1386,8 @@ export default function TypingTestClient({
           <textarea
             value={typedText}
             onChange={handleTypingChange}
+            onCompositionStart={handleCompositionStart}
+            onCompositionEnd={handleCompositionEnd}
             disabled={isFinished || isLoadingSource || Boolean(loadError)}
             placeholder={typingPlaceholder}
             rows={8}
